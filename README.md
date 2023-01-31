@@ -1,2 +1,3 @@
-# helpeRs
-Helper functions for doing research using R
+# `helpeRs`: Package for Helper Functions in `R`
+
+*In progress*
