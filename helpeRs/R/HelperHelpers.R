@@ -97,3 +97,40 @@ WidenMargins <- function(x){
   x = gsub(x,  pattern="\\\\end\\{table\\}",
            replace="\\\\end\\{adjustwidth\\}\\\\end\\{table\\}")
 }
+
+fixZeroEndings <- function(zr,roundAt=2){
+  unlist( lapply(strsplit(as.character(zr),split="\\."),function(l_){
+    if(length(l_) == 1){ retl <- paste(l_, paste(rep("0",times=roundAt),collapse=""),sep=".") }
+    if(length(l_) == 2){
+      retl <- paste(l_[1], paste(l_[2], paste(rep("0",times=roundAt-nchar(l_[2])),collapse=""),sep=""),
+                    sep = ".") }
+    return( retl  )
+  }) ) }
+
+##
+cleanStars <- function(zer){
+  zer = sapply(zer,function(sa)gsub(sa,pattern="\\} c", replace="\\} l"))
+  zer = sapply(zer,function(sa)gsub(sa,pattern="!htbp",replace="htbp"))
+  zer = sapply(zer,function(sa)gsub(sa,pattern="checkmark",replace="\\\\checkmark"))
+  zer = sapply(zer,function(sa)gsub(sa,pattern="\\\\textasteriskcentered",replace="$^\\*$"))
+  zer <- gsub(zer,pattern="Continuous covariates",replace="\\\\emph{Continuous covariates}")
+  zer <- gsub(zer,pattern="Instruments",replace="\\\\emph{Instruments}")
+  zer <- gsub(zer,pattern="Factor covariates",replace="\\\\emph{Factor covariates}")
+  zer <- gsub(zer,pattern="Other statistics",replace="\\\\emph{Other statistics}")
+  zer <- gsub(zer,pattern="Body indicators",replace="\\\\emph{Body indicators}")
+  zer <- gsub(zer,pattern="xxx",replace=" ")
+  zer <- gsub(zer,pattern="space0",replace=" ")
+  zer <- gsub(zer,pattern="space1",replace=" ")
+  zer <- gsub(zer,pattern="space2",replace=" ")
+  zer <- gsub(zer,pattern="spaceX",replace=" ")
+  names(zer) <- NULL
+  captionIndices <- grep(zer,pattern="caption\\{"):(grep(zer,pattern="label\\{"))
+  insertCaptionAfter <- grep(zer,pattern="end\\{tabular")
+
+  # re-order so captions are at bottom of table
+  zer <- c(zer[1:(min(captionIndices)-1)],
+           zer[(max(captionIndices)+1):(insertCaptionAfter)],
+           zer[captionIndices],
+           zer[(insertCaptionAfter+1):length(zer)])
+  return( zer )
+}
