@@ -177,14 +177,24 @@ GetTableEntry <- function(my_lm,
   evalTex_nCountries <- as.character(my_lm$call)[3]
   nCountries <- try(length(unique(eval(parse(text= evalTex_nCountries))[row.names(my_lm$model),]$glp_country)),T)
   browser()
-  R2 <- summary(my_lm)$adj.r.squared
-  if(length(coef(my_lm))==1){
-    # assumes outcome is in first position of my_lm$model
-    R2 <- 1-sum(my_lm$residuals^2) / sum((my_lm$model[,1]-
-                                            mean(my_lm$model[,1]))^2 )
+
+  isGLM <- "glm" %in% class(my_lm)
+  if(isGLM){
+    FitLabel <- "AIC"
+    FitMeasure <- summary(my_lm)$aic
   }
-  meta_data <- cbind(c("Adjusted R-squared","Observations","Countries"),
-                     c(fixZeroEndings(round(R2,iv_round)), nrow( my_lm$model), nCountries ))
+  if(!isGLM){
+    FitLabel <- "Adjusted R-squared"
+    FitMeasure <- summary(my_lm)$adj.r.squared
+
+    if(length(coef(my_lm))==1){
+      # assumes outcome is in first position of my_lm$model
+      FitMeasure <- 1-sum(my_lm$residuals^2) / sum((my_lm$model[,1]-
+                                              mean(my_lm$model[,1]))^2 )
+    }
+  }
+  meta_data <- cbind(c(FitLabel,"Observations","Countries"),
+                     c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( my_lm$model), nCountries ))
   meta_data <-rbind(meta_data,ivDiagnostics)
   final_ <- rbind(content_,meta_data)
   colnames(final_) <- c("mergeVar",NAME)
