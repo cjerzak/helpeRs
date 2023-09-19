@@ -176,6 +176,7 @@ GetTableEntry <- function(my_lm,
 
   evalTex_nCountries <- as.character(my_lm$call)[3]
   nCountries <- try(length(unique(eval(parse(text= evalTex_nCountries))[row.names(my_lm$model),]$glp_country)),T)
+  browser()
   R2 <- summary(my_lm)$adj.r.squared
   if(length(coef(my_lm))==1){
     # assumes outcome is in first position of my_lm$model
