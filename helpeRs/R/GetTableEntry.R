@@ -31,7 +31,8 @@ GetTableEntry <- function(my_lm,
                           bootDataLocation = "./",
                           bootDataNameTag = "Data",
                           bootFactorVars = NULL,
-                          bootExcludeCovars = NULL){
+                          bootExcludeCovars = NULL,
+                          country_text = "country"){
   library( sandwich );library( lmtest ); ivDiagnostics <- NULL
   if(seType != "boot"){
     if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,]}
@@ -175,8 +176,7 @@ GetTableEntry <- function(my_lm,
   content_ <- cbind(row.names(my_summary),content_)
 
   evalTex_nCountries <- as.character(my_lm$call)[3]
-  nCountries <- try(length(unique(eval(parse(text= evalTex_nCountries))[row.names(my_lm$model),]$glp_country)),T)
-  browser()
+  nCountries <- try(length(unique(eval(parse(text= evalTex_nCountries))[row.names(my_lm$model),country_text])),T)
 
   isGLM <- "glm" %in% class(my_lm)
   if(isGLM){
