@@ -82,7 +82,11 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
   ####################
   # Write model names
   if(is.null(model.names)){
-    model.names <- paste("Model (", 1:ncol(t_),  ")",sep = "")
+    # Model (X)
+    # model.names <- paste("Model (", 1:ncol(t_),  ")",sep = "")
+
+    # Model X
+    model.names <- paste("Model ", 1:ncol(t_),  "",sep = "")
   }
   colnames(t_) <-  model.names
 
