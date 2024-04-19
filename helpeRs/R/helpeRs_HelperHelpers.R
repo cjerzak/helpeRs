@@ -2,19 +2,19 @@
 #'
 #' @usage
 #'
-#' getTableEntry(...)
+#' vcovCluster(...)
 #'
 #' @param x Description
 #'
 #' @return `z` Description
 #' @export
 #'
-#' @details `getTableEntry` implements...
+#' @details `vcovCluster` implements...
 #'
 #' @examples
 #'
 #' # Perform analysis
-#' TableEntry <- getTableEntry()
+#' TableEntry <- vcovCluster()
 #'
 #' print( TableEntry )
 #'

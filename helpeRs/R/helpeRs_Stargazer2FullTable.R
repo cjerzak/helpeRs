@@ -3,7 +3,7 @@
 #'
 #' @usage
 #'
-#' Tables2Tex(...)
+#' Stargazer2FullTable(...)
 #'
 #' @param x Description
 #'
@@ -15,7 +15,7 @@
 #' @examples
 #'
 #' # Perform analysis
-#' Tables2Tex()
+#' Stargazer2FullTable()
 #'
 #' print( TableEntries2Tex )
 #'

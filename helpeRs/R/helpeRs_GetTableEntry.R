@@ -27,6 +27,7 @@ GetTableEntry <- function(my_lm,
                           iv_round = 2,
                           NAME = "",
                           iv = F,
+                          inParens = "tstat",
                           seType = "analytical",
                           bootDataLocation = "./",
                           bootDataNameTag = "Data",
@@ -35,8 +36,14 @@ GetTableEntry <- function(my_lm,
                           country_text = "country"){
   library( sandwich );library( lmtest ); ivDiagnostics <- NULL
   if(seType != "boot"){
-    if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,]}
-    if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))}
+    if(is.null(clust_id)){ 
+      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")))[-1,]}
+      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")))}
+    }
+    if(!is.null(clust_id)){ 
+      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,]}
+      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))}
+    }
     if("numeric" %in% class(my_summary)){my_summary<-t(my_summary);my_summary_orig<-t(my_summary_orig)}
     if(is.null(row.names(my_summary))){row.names(my_summary) <- row.names(coef(summary(my_lm)))[2]}
     if(iv == T){
@@ -160,10 +167,14 @@ GetTableEntry <- function(my_lm,
     my_summary[,3] <- my_summary[,1]/(my_summary[,2])
   }
   my_summary <- round(my_summary,iv_round)
-  my_tab <- my_summary[,c(1,3)]
+  
+  # define what to return 
+  if(inParens == "tstat"){  my_tab <- my_summary[,c(1,3)] }
+  if(inParens == "se"){  my_tab <- my_summary[,c(1,2)] }
+  
   if(all(class(my_tab) == "numeric")){my_tab<-t(my_tab)}
   my_tab[,1] <- fixZeroEndings(my_tab[,1])
-  my_tab[,2] <- fixZeroEndings(my_tab[,2])
+  my_tab[,2] <- fixZeroEndings(my_tab[,2]) 
   star_key <- rep("",times = nrow(my_summary))
   if(seType != "boot"){ star_key[my_summary_orig[,4]<0.05] <- "*" }
   if(seType == "boot"){
@@ -171,7 +182,7 @@ GetTableEntry <- function(my_lm,
     #star_key[!(lower_ <= 0 & upper_ >= 0)] <- "*"
     star_key[abs(my_summary[,3]) > 1.96] <- "*"
   }
-  content_ <- paste(my_tab[,1], " (",my_tab[,2], ")",sep = "")
+  content_ <- paste(my_tab[,1], " (",my_tab[,2], ")",sep = "") 
   content_ <- paste(content_, star_key, sep = "")
   content_ <- cbind(row.names(my_summary),content_)
 
@@ -193,6 +204,7 @@ GetTableEntry <- function(my_lm,
                                               mean(my_lm$model[,1]))^2 )
     }
   }
+  
   meta_data <- cbind(c(FitLabel,"Observations","Countries"),
                      c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( my_lm$model), nCountries ))
   meta_data <-rbind(meta_data,ivDiagnostics)

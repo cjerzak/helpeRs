@@ -26,21 +26,21 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                        checkmark_list = NULL,
                        saveFolder = "./", nameTag = "Table", saveFull = T, tabCaption = "",
                        model.names = NULL, NameConversionMat = NULL, DoFullTableKey = T,
-                       font.size = "footnotesize",
+                       font.size = "footnotesize", inParens = "tstat",
                        font.size.full = "footnotesize"){
   ########################
   # Process R tables
   for(i in 1:length(reg_list)){
     if("character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s', seType = seType)",
+      eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s', seType = seType, inParens = inParens)",
                               i, reg_list[i], clust_id)))
     }
     if(!"character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = '%s', seType = seType)",
-                                i, clust_id)))
+      eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = %s, seType = seType, inParens = inParens)",
+                                i, ifelse(is.null(clust_id), yes = "NULL", no = paste0("'",clust_id,"'") ))))
     }
   }
-  t_ <- eval(parse(text = sprintf("t(rbind.fill(%s))",
+  t_ <- eval(parse(text = sprintf("t(plyr::rbind.fill(%s))",
                                   paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  )); t_[is.na(t_)] <- ""
   t_FULL <- t_
 
@@ -62,55 +62,40 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                            names(checkmark_list)[checkm_i])))
       t_ <- rbind(t_, t(checkm_bind) )
     }}
-
+  
+  # combine other statistics information 
+  if(length(reg_list) == 1){ t_ <- as.matrix(t_) }
   t_ <- rbind(t_,t(data.frame("Other..statistics" = rep("",times=length(reg_list)) )))
   t_ <- rbind(t_,t(data.frame("space1" = rep("",times=length(reg_list)) )))
   t_ <- rbind(t_,t(data.frame("space2" = rep("",times=length(reg_list))  )))
   row.names(t_) <- gsub(row.names(t_),pattern="\\.\\.",replace=" ")
   if(!is.null( NameConversionMat )){
-    row.names(t_)[!row.names(t_) %in% NameConversionMat[,2]]
-    t_ <- t_[na.omit(match(NameConversionMat[,2],  row.names(t_))),]
+    # row.names(t_)[!row.names(t_) %in% NameConversionMat[,2]]
+    t_ <- t_[na.omit(match(NameConversionMat[,2], row.names(t_))),]
+    if(length(reg_list) == 1){ t_ <- as.matrix(t_) }
   }
-
-  #t_ <- rbind(t_[1:(grep(row.names(t_),pattern="Executive baseline")-1),],
-              #t(data.frame("xxx" = rep("",times=4))),
-              #t(data.frame("Body..indicators" = rep("",times=4))),
-              #t_[grep(row.names(t_),pattern="Executive baseline"):nrow(t_),])
-  #row.names(t_)[row.names(t_) == "Party leader"] <- paste(row.names(t_)[row.names(t_) == "Party leader"]," (", round(tapply(DatFinal$body_n,DatFinal$bodyType, mean)["partyLeader"]), ")",sep = "")
   row.names(t_) <- gsub(row.names(t_),pattern="\\.\\.",replace=" ")
 
-  ####################
   # Write model names
-  if(is.null(model.names)){
-    # Model (X)
-    # model.names <- paste("Model (", 1:ncol(t_),  ")",sep = "")
-
-    # Model X
-    model.names <- paste("Model ", 1:ncol(t_),  "",sep = "")
-  }
+  if(is.null(model.names)){ model.names <- paste0("Model ", 1:ncol(t_),  "") }
   colnames(t_) <-  model.names
 
-  ####################
   # Setup full table
-  fullModelInfo <- ""
-  TAB_LAB <- sprintf("tab:Reg%s_SE%s",nameTag, seType)
+  fullModelInfo <- ""; TAB_LAB <- sprintf("tab:Reg%s_SE%s",nameTag, seType)
   if(DoFullTableKey){
     fullModelInfo <- sprintf("Full model results are given in Table \\ref{%s}.",
                              TAB_LAB_FULL <- gsub(TAB_LAB, pattern="tab:", replace="tab:FULL_"))
   }
 
-  ##############################
   # Build table via stargazer
-  stargazer_text <- capture.output( stargazer::stargazer(t_,
+  stargazer_text <- cleanStars( capture.output( stargazer::stargazer(t_,
                                                          label = TAB_LAB,
                                                          font.size = font.size,
-                                                         title = sprintf("%s %s", tabCaption, fullModelInfo )))
-  stargazer_text <- cleanStars(stargazer_text)
-  names(stargazer_text)<-NULL;stargazer_text
-  write(stargazer_text,file = gsub(sprintf("%s/tab%s_SE%s.tex",
+                                                         title = sprintf("%s %s", tabCaption, fullModelInfo ))) )
+  names(stargazer_text)<-NULL
+  write(stargazer_text, file = gsub(sprintf("%s/tab%s_SE%s.tex",
                                       saveFolder, nameTag, seType), pattern="//",replace="/") )
 
-  ##############################
   # Save full table if desired
   t_FULL_input <- t_FULL
   if(saveFull == T){
@@ -131,8 +116,5 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
     write(stargazer_text,file = gsub(sprintf("%s/FULL_tab%s_SE%s.tex",
                                              saveFolder, nameTag, seType),pattern="//",replace="/") )
   }
-
-  ##############################
   # Note: Function has no R output (all output is read to disk)
-  ##############################
 }

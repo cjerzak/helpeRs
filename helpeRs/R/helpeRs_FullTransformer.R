@@ -2,19 +2,19 @@
 #'
 #' @usage
 #'
-#' getTableEntry(...)
+#' FullTransformer(...)
 #'
 #' @param x Description
 #'
 #' @return `z` Description
 #' @export
 #'
-#' @details `getTableEntry` implements...
+#' @details `FullTransformer` implements...
 #'
 #' @examples
 #'
 #' # Perform analysis
-#' TableEntry <- getTableEntry()
+#' TableEntry <- FullTransformer()
 #'
 #' print( TableEntry )
 #'
