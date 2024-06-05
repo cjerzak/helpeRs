@@ -33,7 +33,9 @@ GetTableEntry <- function(my_lm,
                           bootDataNameTag = "Data",
                           bootFactorVars = NULL,
                           bootExcludeCovars = NULL,
-                          country_text = "country"){
+                          superunit_covariateName = "country",
+                          superunit_label = "Countries"
+                          ){
   library( sandwich );library( lmtest ); ivDiagnostics <- NULL
   if(seType != "boot"){
     if(is.null(clust_id)){ 
@@ -186,10 +188,10 @@ GetTableEntry <- function(my_lm,
   content_ <- paste(content_, star_key, sep = "")
   content_ <- cbind(row.names(my_summary),content_)
 
-  evalTex_nCountries <- as.character(my_lm$call)[3]
-  nCountries <- try(length(unique(eval(parse(text= evalTex_nCountries))[row.names(my_lm$model),country_text])),T)
-
   isGLM <- "glm" %in% class(my_lm)
+  evalTex_nSuperunits <- as.character(my_lm$call)[3+isGLM]
+  nSuperunits <- try(length(unique(eval(parse(text = evalTex_nSuperunits))[row.names(my_lm$model),superunit_covariateName])),T)
+    
   if(isGLM){
     FitLabel <- "AIC"
     FitMeasure <- summary(my_lm)$aic
@@ -200,13 +202,12 @@ GetTableEntry <- function(my_lm,
 
     if(length(coef(my_lm))==1){
       # assumes outcome is in first position of my_lm$model
-      FitMeasure <- 1-sum(my_lm$residuals^2) / sum((my_lm$model[,1]-
-                                              mean(my_lm$model[,1]))^2 )
+      FitMeasure <- 1-sum(my_lm$residuals^2) / sum((my_lm$model[,1] - mean(my_lm$model[,1]))^2 )
     }
   }
   
-  meta_data <- cbind(c(FitLabel,"Observations","Countries"),
-                     c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( my_lm$model), nCountries ))
+  meta_data <- cbind(c(FitLabel,"Observations",superunit_label),
+                     c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( my_lm$model), nSuperunits ))
   meta_data <-rbind(meta_data,ivDiagnostics)
   final_ <- rbind(content_,meta_data)
   colnames(final_) <- c("mergeVar",NAME)

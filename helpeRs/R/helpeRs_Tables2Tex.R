@@ -23,20 +23,28 @@
 #' @md
 
 Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
-                       checkmark_list = NULL,
+                       checkmark_list = NULL, addrow_list = NULL,
                        saveFolder = "./", nameTag = "Table", saveFull = T, tabCaption = "",
                        model.names = NULL, NameConversionMat = NULL, DoFullTableKey = T,
+                       superunit_covariateName = "country", 
+                       superunit_label = "Countries", 
                        font.size = "footnotesize", inParens = "tstat",
                        font.size.full = "footnotesize"){
   ########################
   # Process R tables
   for(i in 1:length(reg_list)){
     if("character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s', seType = seType, inParens = inParens)",
+      eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s',
+                                seType = seType, inParens = inParens, 
+                                superunit_covariateName = superunit_covariateName,
+                                superunit_label = superunit_label)",
                               i, reg_list[i], clust_id)))
     }
     if(!"character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = %s, seType = seType, inParens = inParens)",
+      eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = %s, 
+                                seType = seType, inParens = inParens,
+                                superunit_covariateName = superunit_covariateName,
+                                superunit_label = superunit_label)",
                                 i, ifelse(is.null(clust_id), yes = "NULL", no = paste0("'",clust_id,"'") ))))
     }
   }
@@ -63,13 +71,26 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
       t_ <- rbind(t_, t(checkm_bind) )
     }}
   
+  if(!is.null(addrow_list)){
+    for(addrow_i in 1:length(addrow_list)){
+      t_ <- rbind(t_,
+          eval(parse(text = sprintf("t(data.frame('%s' = addrow_list[[addrow_i]]))",
+                                    names(addrow_list)[[addrow_i]]) ) ) )
+    }
+  }
+  
+  
   # combine other statistics information 
   if(length(reg_list) == 1){ t_ <- as.matrix(t_) }
   t_ <- rbind(t_,t(data.frame("Other..statistics" = rep("",times=length(reg_list)) )))
+  t_ <- rbind(t_,t(data.frame("Control..variables" = rep("",times=length(reg_list)) )))
+  t_ <- rbind(t_,t(data.frame("space0" = rep("",times=length(reg_list)) )))
   t_ <- rbind(t_,t(data.frame("space1" = rep("",times=length(reg_list)) )))
   t_ <- rbind(t_,t(data.frame("space2" = rep("",times=length(reg_list))  )))
+  t_ <- rbind(t_,t(data.frame("space3" = rep("",times=length(reg_list))  )))
+  t_ <- rbind(t_,t(data.frame("space4" = rep("",times=length(reg_list))  )))
   row.names(t_) <- gsub(row.names(t_),pattern="\\.\\.",replace=" ")
-  if(!is.null( NameConversionMat )){
+  if( !is.null( NameConversionMat ) ){
     # row.names(t_)[!row.names(t_) %in% NameConversionMat[,2]]
     t_ <- t_[na.omit(match(NameConversionMat[,2], row.names(t_))),]
     if(length(reg_list) == 1){ t_ <- as.matrix(t_) }
