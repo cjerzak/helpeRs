@@ -30,8 +30,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                        superunit_label = "Countries", 
                        font.size = "footnotesize", inParens = "tstat",
                        font.size.full = "footnotesize"){
-  ########################
-  # Process R tables
+  print2("Processing R tables...")
   for(i in 1:length(reg_list)){
     if("character" %in% class(reg_list)){
       eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s',
@@ -52,8 +51,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                   paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  )); t_[is.na(t_)] <- ""
   t_FULL <- t_
 
-  ########################
-  # Perform name re-writes
+  print2("Performing name re-writes...")
   if(!is.null(NameConversionMat)){
   row.names(t_) <- sapply(row.names(t_),function(zer){
     match_ <- sapply(NameConversionMat[,1],function(zerr){ grepl(zer,pattern=zerr) })
@@ -79,8 +77,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
     }
   }
   
-  
-  # combine other statistics information 
+  print2("Incorporating other statistics info...")
   if(length(reg_list) == 1){ t_ <- as.matrix(t_) }
   t_ <- rbind(t_,t(data.frame("Other..statistics" = rep("",times=length(reg_list)) )))
   t_ <- rbind(t_,t(data.frame("Control..variables" = rep("",times=length(reg_list)) )))
@@ -97,18 +94,18 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
   }
   row.names(t_) <- gsub(row.names(t_),pattern="\\.\\.",replace=" ")
 
-  # Write model names
+  print2("Writing model names...")
   if(is.null(model.names)){ model.names <- paste0("Model ", 1:ncol(t_),  "") }
   colnames(t_) <-  model.names
 
-  # Setup full table
+  print2("Setting up full table...")
   fullModelInfo <- ""; TAB_LAB <- sprintf("tab:Reg%s_SE%s",nameTag, seType)
   if(DoFullTableKey){
     fullModelInfo <- sprintf("Full model results are given in Table \\ref{%s}.",
                              TAB_LAB_FULL <- gsub(TAB_LAB, pattern="tab:", replace="tab:FULL_"))
   }
 
-  # Build table via stargazer
+  print2("Building table via stargazer...")
   stargazer_text <- cleanStars( capture.output( stargazer::stargazer(t_,
                                                          label = TAB_LAB,
                                                          font.size = font.size,
@@ -117,9 +114,9 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
   write(stargazer_text, file = gsub(sprintf("%s/tab%s_SE%s.tex",
                                       saveFolder, nameTag, seType), pattern="//",replace="/") )
 
-  # Save full table if desired
   t_FULL_input <- t_FULL
   if(saveFull == T){
+    print2("Saving full table...")
     t_MadeFull <- FullTransformer(t_FULL = t_FULL_input,
                                   COLNAMES_VEC = model.names)
     t_MadeFull <- t_MadeFull[!duplicated(row.names(t_MadeFull)),]
@@ -138,4 +135,6 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                              saveFolder, nameTag, seType),pattern="//",replace="/") )
   }
   # Note: Function has no R output (all output is read to disk)
+  
+  print2("Done with call to Tables2Tex()!")
 }

@@ -165,6 +165,7 @@ vcovCluster <- function(fm, clvar){
 #' @export
 #'
 #' @md
+
 fixZeroEndings <- function(zr,roundAt=2){
   unlist( lapply(strsplit(as.character(zr),split="\\."),function(l_){
     if(length(l_) == 1){ retl <- paste(l_, paste(rep("0",times=roundAt),collapse=""),sep=".") }
@@ -204,4 +205,8 @@ cleanStars <- function(zer){
            zer[captionIndices],
            zer[(insertCaptionAfter+1):length(zer)])
   return( zer )
+}
+
+print2 <- function(text, quiet = F){
+  if(!quiet){ print( sprintf("[%s] %s" ,format(Sys.time(), "%Y-%m-%d %H:%M:%S"),text) ) }
 }

@@ -39,12 +39,12 @@ GetTableEntry <- function(my_lm,
   library( sandwich );library( lmtest ); ivDiagnostics <- NULL
   if(seType != "boot"){
     if(is.null(clust_id)){ 
-      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")))[-1,]}
-      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")))}
+      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) )[-1,] }
+      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) ) }
     }
     if(!is.null(clust_id)){ 
-      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,]}
-      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))}
+      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,] }
+      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id))) }
     }
     if("numeric" %in% class(my_summary)){my_summary<-t(my_summary);my_summary_orig<-t(my_summary_orig)}
     if(is.null(row.names(my_summary))){row.names(my_summary) <- row.names(coef(summary(my_lm)))[2]}
