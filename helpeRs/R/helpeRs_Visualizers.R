@@ -54,7 +54,7 @@ heatMap <- function(x, y, z,
                     main = "",
                     N,yaxt = NULL,
                     xlab = "",
-                    ylab ="",horizontal = NULL,
+                    ylab ="",horizontal = F,
                     useLog = "", legend.width = 1,
                     ylim = NULL, xlim = NULL, zlim = NULL,
                     add.legend = T,legend.only=F,
@@ -193,6 +193,7 @@ MakeHeatMap <- function(factor1, factor2, outcome, dat, lm_obj, pdf_path,
                         useLog = "", OUTCOME_SCALER = 1, 
                         OutcomeTransformFxn = function(x){x},
                         openBrowser = F){ 
+  print2(sprintf("MakeHeatMap: %s and %s", factor1, factor2))
   if(openBrowser){browser()}
   eval(parse(text = sprintf('
     dat_new <- expand.grid("%s" = seq((1/extrap_factor1)*min(f2n(dat[,factor1])),

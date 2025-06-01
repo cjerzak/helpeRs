@@ -183,6 +183,15 @@ cleanStars <- function(zer){
   zer = sapply(zer,function(sa)gsub(sa,pattern="\\\\textasteriskcentered",replace="$^\\*$"))
   zer <- gsub(zer,pattern="Continuous covariates",replace="\\\\emph{Continuous covariates}")
   zer <- gsub(zer,pattern="Instruments",replace="\\\\emph{Instruments}")
+  
+  zer <- gsub(zer,pattern="StartEmph",replace="\\\\emph{")
+  zer <- gsub(zer,pattern="EndEmph",replace="}")
+  
+  zer <- gsub(zer,pattern="StartMakeCell",replace="\\\\makecell{")
+  zer <- gsub(zer,pattern="EndMakeCell",replace="}")
+  
+  zer <- gsub(zer,pattern="LINEBREAK",replace=" \\\\\\\\ ")
+              
   zer <- gsub(zer,pattern="Factor covariates",replace="\\\\emph{Factor covariates}")
   zer <- gsub(zer,pattern="Control variables",replace="\\\\emph{Control variables}")
   zer <- gsub(zer,pattern="Other statistics",replace="\\\\emph{Other statistics}")

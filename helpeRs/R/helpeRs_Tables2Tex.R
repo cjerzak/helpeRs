@@ -44,9 +44,10 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                 seType = seType, inParens = inParens,
                                 superunit_covariateName = superunit_covariateName,
                                 superunit_label = superunit_label)",
-                                i, ifelse(is.null(clust_id), yes = "NULL", no = paste0("'",clust_id,"'") ))))
+                                i, ifelse(is.null(clust_id), yes = "NULL", no = paste0("'",clust_id,"'"))) ))
     }
   }
+  
   t_ <- eval(parse(text = sprintf("t(plyr::rbind.fill(%s))",
                                   paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  )); t_[is.na(t_)] <- ""
   t_FULL <- t_
@@ -61,8 +62,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
   t_ <- t_[row.names(t_) != "DROP",]
 
   if(!is.null(checkmark_list)){
-    t_ <- rbind(t_,
-                t(data.frame("Factor..covariates" = rep("",times=length(checkmark_list[[1]])) )))
+    t_ <- rbind(t_, t(data.frame("Factor..covariates" = rep("",times=length(checkmark_list[[1]])) )))
     for(checkm_i in 1:length(checkmark_list)){
       checkm_bind <- eval(parse(text = sprintf('data.frame("%s" = ifelse( checkmark_list[[checkm_i]] == 1, yes = "checkmark", no = ""))',
                                            names(checkmark_list)[checkm_i])))
@@ -126,8 +126,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                                            title = sprintf("%s", tabCaption ))  )
     stargazer_text <- Stargazer2FullTable( stargazer_text,
                                            fontsize = ifelse(ncol(t_MadeFull) < 5,
-                                                             yes = "footnotesize",
-                                                             no = "tiny"))
+                                                             yes = "footnotesize", no = "tiny"))
     if(any(grepl(stargazer_text, pattern = "\\.\\."))){
       print("Debug checkpoint"); browser()
     }
