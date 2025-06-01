@@ -24,6 +24,7 @@
 #' @md
 
 Stargazer2FullTable <- function(stargazer_text, fontsize = "footnotesize"){
+  browser()
   stargazer_text_orig <- stargazer_text
   stargazer_text = sapply(stargazer_text,function(sa)gsub(sa,pattern="\\[!htbp\\]",replace=""))
   stargazer_text = sapply(stargazer_text,function(sa)gsub(sa,pattern="\\\\centering",replace=""))
