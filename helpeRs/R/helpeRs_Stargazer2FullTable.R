@@ -1,27 +1,3 @@
-#' Implements...
-#'
-#' @usage
-#'
-#' Stargazer2FullTable(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
-#' @export
-#'
-#' @details `Tables2Tex` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' Stargazer2FullTable()
-#'
-#' print( TableEntries2Tex )
-#'
-#' @export
-#'
-#' @md
-
 #' Convert a stargazer table to a self-contained longtable.
 #'
 #' @param stargazer_text A character vector – the raw lines produced by

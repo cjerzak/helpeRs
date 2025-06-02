@@ -1,24 +1,21 @@
-#' Implements...
+#' Plot a matrix as an image with optional axis labels
 #'
-#' @usage
+#' This is a thin wrapper around [graphics::image()] that flips the matrix so
+#' the first row is shown at the top of the plot.  Axis tick labels can be
+#' supplied via `xaxt` and `yaxt`.
 #'
-#' image2(...)
+#' @param mat Matrix to display.
+#' @param xaxt,yaxt Optional character vectors containing the x and y axis
+#'   labels.  If `NULL` no axis ticks are drawn.
+#' @param col Optional vector of colours passed to [graphics::image()].
+#' @param main Optional plot title.
+#' @param scale_vec Numeric vector controlling the placement of tick labels on
+#'   the x and y axes.
+#' @param cex.axis Character expansion for axis tick labels.
 #'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @return Invisibly returns `NULL`. The function is called for its side effect
+#'   of producing a plot.
 #' @export
-#'
-#' @details `image2` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' image2()
-#'
-#' @export
-#'
-#' @md
 
 image2 = function(mat,xaxt=NULL,yaxt = NULL,col=NULL,main=NULL,scale_vec=c(1,1.04),cex.axis = 1){
   # pretty plotting of 2D data
@@ -28,27 +25,38 @@ image2 = function(mat,xaxt=NULL,yaxt = NULL,col=NULL,main=NULL,scale_vec=c(1,1.0
   if(!is.null(yaxt)){ axis(2, at = 0:(nrow(mat)-1)/nrow(mat)*scale_vec[2], tick=F,labels = rev(yaxt),cex.axis = cex.axis,las = 2)  }
 }
 
-#' Implements...
+#' Interpolate scattered data and draw a heat map
 #'
-#' @usage
+#' This helper uses the `fields` and `akima` packages to interpolate scattered
+#' `(x, y, z)` observations onto a regular grid and then visualises the result
+#' with `image.plot`.
 #'
-#' heatMap(...)
+#' @param x,y,z Numeric vectors defining the coordinates and values to
+#'   interpolate.
+#' @param main Character string used as the plot title.
+#' @param N Number of grid cells in each direction passed to `interp`.
+#' @param yaxt Optional labels for the y axis; if `NULL` (default) labels are
+#'   omitted.
+#' @param xlab,ylab Axis labels passed to the plotting function.
+#' @param horizontal Logical; if `TRUE` draw the legend horizontally.
+#' @param useLog Character string specifying axes to be log-transformed
+#'   (e.g. `"xyz"`).
+#' @param legend.width Width of the colour legend.
+#' @param ylim,xlim,zlim Numeric vectors giving plot limits.
+#' @param add.legend Logical; if `FALSE` the legend is suppressed.
+#' @param legend.only Logical; if `TRUE` draw only the legend.
+#' @param vline,hline Optional positions of vertical or horizontal reference
+#'   lines.
+#' @param col_vline,col_hline Colours for the reference lines.
+#' @param cex.lab,cex.main Character expansion for axis labels and title.
+#' @param myCol Optional colour palette.
+#' @param includeMarginals Logical; add 1D marginal rugs if `TRUE`.
+#' @param marginalJitterSD_x,marginalJitterSD_y Numeric jitter amounts used when
+#'   drawing marginals.
+#' @param openBrowser Logical; if `TRUE` enters debug mode via `browser()`.
 #'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @return Invisibly returns `NULL`.  Called for its plotting side effect.
 #' @export
-#'
-#' @details `image2` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' heatMap()
-#'
-#' @export
-#'
-#' @md
 
 heatMap <- function(x, y, z,
                     main = "",
@@ -106,27 +114,15 @@ heatMap <- function(x, y, z,
   }
 }
 
-#' Implements...
+#' Summarise each column of a data frame
 #'
-#' @usage
+#' Numeric columns are replaced by their mean while non-numeric columns are
+#' replaced by their most common value.  This is mainly used when constructing
+#' prediction grids for plotting.
 #'
-#' colSummmary(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param x A data frame.
+#' @return A vector of summary values with one entry per column of `x`.
 #' @export
-#'
-#' @details `image2` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' colSummmary()
-#'
-#' @export
-#'
-#' @md
 #' 
 colSummmary <- function(x){ 
   apply(x,2,function(x_){
@@ -136,27 +132,14 @@ colSummmary <- function(x){
     return( x_ ) })
 }
 
-#' Implements...
+#' Convert data frame columns to numeric when possible
 #'
-#' @usage
+#' Attempts to coerce each column of a data frame to numeric.  Columns that
+#' cannot be coerced are left unchanged.
 #'
-#' cols2numeric(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param x A data frame.
+#' @return A data frame with the same shape as `x`.
 #' @export
-#'
-#' @details `cols2numeric` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' cols2numeric()
-#'
-#' @export
-#'
-#' @md
 
 cols2numeric <- function(x){ 
   apply(x,2,function(x_){
@@ -166,27 +149,27 @@ cols2numeric <- function(x){
     return( x_ ) })
 }
 
-#' Implements...
+#' Visualise a two-way predictor effect as a heat map
 #'
-#' @usage
+#' Creates a grid over the ranges of two predictor variables and uses a fitted
+#' model to predict the outcome on that grid.  The predictions are then plotted
+#' with [heatMap()] and saved to `pdf_path`.
 #'
-#' MakeHeatMap(...)
+#' @param factor1,factor2 Names of the predictor variables to vary.
+#' @param outcome Name of the outcome variable.
+#' @param dat Data frame used to fit the model.
+#' @param lm_obj Fitted linear model object.
+#' @param pdf_path File path to save the resulting heat map.
+#' @param extrap_factor1,extrap_factor2 Multipliers controlling how far beyond
+#'   the data range the grid should extend.
+#' @param useLog Character string specifying axes to log-transform.
+#' @param OUTCOME_SCALER Multiplicative factor applied to predicted values.
+#' @param OutcomeTransformFxn Function applied to predictions before plotting.
+#' @param openBrowser Logical; if `TRUE` pauses execution via `browser()` for
+#'   interactive inspection.
 #'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @return Invisibly returns `NULL`. The heat map is written to `pdf_path`.
 #' @export
-#'
-#' @details `image2` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' MakeHeatMap()
-#'
-#' @export
-#'
-#' @md
 
 MakeHeatMap <- function(factor1, factor2, outcome, dat, lm_obj, pdf_path, 
                         extrap_factor1 = 1, extrap_factor2 = 1, 
