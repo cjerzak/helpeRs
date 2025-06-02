@@ -71,8 +71,9 @@ Stargazer2FullTable <- function(stargazer_text, fontsize = "footnotesize"){
                           "\\endhead",
                           stargazer_text[(endhead_index+1):length(stargazer_text)])
   }
-  stargazer_text <- gsub(stargazer_text, x = "C L I P- R S I C D", replace = "CLIP-RSICD", USE.NAMES = F)
-  stargazer_text <- gsub(stargazer_text, x = "Vi T", replace = "ViT", USE.NAMES = F)
+  stargazer_text <- gsub(stargazer_text, pattern = '"', replace = "")
+  stargazer_text <- gsub(stargazer_text, pattern = "C L I P- R S I C D", replace = "CLIP-RSICD")
+  stargazer_text <- gsub(stargazer_text, pattern = "Vi T", replace = "ViT")
   stargazer_text <- sapply(stargazer_text,function(sa){ gsub(sa,pattern="\\\\end\\{tabular\\}", replace="") })
   return(  stargazer_text )
 }
