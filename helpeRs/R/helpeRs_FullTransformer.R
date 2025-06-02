@@ -1,26 +1,13 @@
-#' Implements...
+#' Clean and reorder regression tables
 #'
-#' @usage
+#' Takes a matrix of regression output and performs a number of string
+#' replacements and reordering steps so that the resulting table is suitable for
+#' inclusion in LaTeX documents.
 #'
-#' FullTransformer(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param t_FULL Matrix or data frame containing the raw table.
+#' @param COLNAMES_VEC Character vector of column names to apply to the table.
+#' @return A transformed data frame.
 #' @export
-#'
-#' @details `FullTransformer` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' TableEntry <- FullTransformer()
-#'
-#' print( TableEntry )
-#'
-#' @export
-#'
-#' @md
 
 FullTransformer <- function(t_FULL,
                             COLNAMES_VEC){

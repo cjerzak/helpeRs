@@ -1,27 +1,13 @@
-#' Implements...
+#' Cluster-robust covariance matrix estimator
 #'
-#' @usage
+#' Convenience wrapper that computes a clustered sandwich covariance matrix for
+#' a fitted model.
 #'
-#' vcovCluster(...)
+#' @param fm A fitted model object.
+#' @param clvar Name of the variable identifying clusters within `fm$model`.
 #'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @return A covariance matrix.
 #' @export
-#'
-#' @details `vcovCluster` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' TableEntry <- vcovCluster()
-#'
-#' print( TableEntry )
-#'
-#' @export
-#'
-#' @md
-
 vcovCluster <- function(fm, clvar){
   # R-codes (www.r-project.org) for computing
   # clustered-standard errors. Mahmood Arai, Jan 26, 2008.
@@ -39,11 +25,10 @@ vcovCluster <- function(fm, clvar){
   N <- length(cluster)
   K <- dim(vcov(fm))[1]
   dfc <- (M/(M-1))*((N-1)/(N-K))
-  uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
+  uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum))
   vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
 }
 
-#' Implements...
 #'
 #' @usage
 #'
@@ -62,35 +47,24 @@ vcovCluster <- function(fm, clvar){
 #' TableEntry <- getTableEntry()
 #'
 #' print( TableEntry )
+#' Convert factors to numeric
 #'
+#' Converts its input to character and then numeric.  Useful when working with
+#' factors that actually encode numeric values.
+#'
+#' @param x A vector to convert.
+#' @return A numeric vector.
 #' @export
-#'
-#' @md
-f2n<-function(.){as.numeric(as.character(.))}
+f2n <- function(x){as.numeric(as.character(x))}
 
-#' Implements...
+#' Widen margins in a LaTeX table string
 #'
-#' @usage
+#' Adds a small horizontal shift to both margins of a table by inserting the
+#' `adjustwidth` environment from the *ragged2e* package.
 #'
-#' getTableEntry(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param x Character vector containing the LaTeX table.
+#' @return Modified character vector.
 #' @export
-#'
-#' @details `getTableEntry` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' TableEntry <- getTableEntry()
-#'
-#' print( TableEntry )
-#'
-#' @export
-#'
-#' @md
 WidenMargins <- function(x){
   x = gsub(x,  pattern="\\\\begin\\{table\\}\\[htbp\\]",
            replace="\\\\begin\\{table\\}[htbp]\\\\begin\\{adjustwidth\\}\\{-.5in\\}\\{-.5in\\}")
@@ -98,29 +72,6 @@ WidenMargins <- function(x){
            replace="\\\\end\\{adjustwidth\\}\\\\end\\{table\\}")
 }
 
-#' Implements...
-#'
-#' @usage
-#'
-#' vcovCluster(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
-#' @export
-#'
-#' @details `vcovCluster` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' TableEntry <- vcovCluster()
-#'
-#' print( TableEntry )
-#'
-#' @export
-#'
-#' @md
 vcovCluster <- function(fm, clvar){
   # R-codes (www.r-project.org) for computing
   # clustered-standard errors. Mahmood Arai, Jan 26, 2008.
@@ -142,29 +93,15 @@ vcovCluster <- function(fm, clvar){
   vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
 }
 
-#' Implements...
+#' Ensure numbers have a fixed number of decimal places
 #'
-#' @usage
+#' Pads numeric strings with trailing zeros so that all have exactly `roundAt`
+#' digits after the decimal point.
 #'
-#' fixZeroEndings(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param zr A character or numeric vector to process.
+#' @param roundAt Integer; desired number of decimal places.
+#' @return A character vector with padded values.
 #' @export
-#'
-#' @details `fixZeroEndings` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' fixZeroEndings <- getTableEntry()
-#'
-#' print( fixZeroEndings )
-#'
-#' @export
-#'
-#' @md
 
 fixZeroEndings <- function(zr,roundAt=2){
   unlist( lapply(strsplit(as.character(zr),split="\\."),function(l_){

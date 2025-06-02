@@ -1,26 +1,30 @@
-#' Implements...
+#' Generate publication-ready regression tables
 #'
-#' @usage
+#' Collates a list of regression model objects, extracts their coefficient
+#' tables via [GetTableEntry()] and writes LaTeX files using
+#' [stargazer::stargazer()].  Optionally, a full table of all covariates is
+#' produced in addition to a condensed version.
 #'
-#' Tables2Tex(...)
+#' @param reg_list A list of fitted model objects or character strings giving
+#'   objects to evaluate.
+#' @param clust_id Optional name of the clustering variable.
+#' @param seType Type of standard errors: either "analytical" or "boot".
+#' @param checkmark_list Optional list of binary indicators to add check-marks.
+#' @param addrow_list Optional named list of additional rows to append.
+#' @param saveFolder Folder in which to write the LaTeX files.
+#' @param nameTag Base name for generated files.
+#' @param saveFull Logical; if `TRUE` also produce the full table.
+#' @param tabCaption Caption to use for the condensed table.
+#' @param model.names Optional vector of model column headings.
+#' @param NameConversionMat Optional two-column matrix used to rename row labels.
+#' @param DoFullTableKey Logical; if `TRUE` mention the full table in the caption.
+#' @param superunit_covariateName Variable used to count higher level units.
+#' @param superunit_label Label for that count in the table footnotes.
+#' @param font.size, font.size.full Font sizes passed to stargazer for the short
+#'   and full tables respectively.
 #'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @return Invisibly returns `NULL`.  LaTeX files are written to `saveFolder`.
 #' @export
-#'
-#' @details `Tables2Tex` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' Tables2Tex()
-#'
-#' print( TableEntries2Tex )
-#'
-#' @export
-#'
-#' @md
 
 Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                        checkmark_list = NULL, addrow_list = NULL,

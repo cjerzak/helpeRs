@@ -1,26 +1,30 @@
-#' Implements...
+#' Extract regression results as a table row
 #'
-#' @usage
+#' Builds a one-row data frame containing coefficient estimates and summary
+#' statistics from a fitted model.  Clustered or bootstrap standard errors can
+#' be used if requested.
 #'
-#' getTableEntry(...)
-#'
-#' @param x Description
-#'
-#' @return `z` Description
+#' @param my_lm A fitted model object.
+#' @param clust_id Optional name of the clustering variable for clustered
+#'   standard errors.
+#' @param iv_round Number of digits to round estimates and statistics.
+#' @param NAME Column name to use for the resulting row.
+#' @param iv Logical; set to `TRUE` for instrumental variable models to include
+#'   diagnostic statistics.
+#' @param inParens Either "tstat" (default) or "se" indicating whether t-statistics
+#'   or standard errors should be placed in parentheses.
+#' @param seType Type of standard error.  Either "analytical" or "boot" for
+#'   bootstrap.
+#' @param bootDataLocation Folder containing bootstrap replications.
+#' @param bootDataNameTag File prefix for bootstrap data.
+#' @param bootFactorVars Character vector of factor variables to treat as factors
+#'   when bootstrapping.
+#' @param bootExcludeCovars Variables to exclude when bootstrapping.
+#' @param superunit_covariateName Name of the grouping variable used to count
+#'   higher level units.
+#' @param superunit_label Label to display for the super-unit count.
+#' @return A one-row data frame with formatted coefficients and metadata.
 #' @export
-#'
-#' @details `getTableEntry` implements...
-#'
-#' @examples
-#'
-#' # Perform analysis
-#' TableEntry <- getTableEntry()
-#'
-#' print( TableEntry )
-#'
-#' @export
-#'
-#' @md
 
 GetTableEntry <- function(my_lm,
                           clust_id,
