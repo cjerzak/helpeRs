@@ -114,6 +114,72 @@ heatMap <- function(x, y, z,
   }
 }
 
+#' Quick heat map of a matrix
+#'
+#' Provides a convenience wrapper around \code{heatMap()} for fast
+#' visualisation of matrix-like objects. Optionally uses \pkg{ggplot2}
+#' for a polished appearance.
+#'
+#' @param mat Matrix or data frame to plot.
+#' @param row_labels,col_labels Optional row and column tick labels.
+#' @param use_gg Logical; if \code{TRUE} return a \pkg{ggplot2} object.
+#' @param scale Logical; standardise values before plotting.
+#' @param log Logical; log-transform values before plotting.
+#' @param includeMarginals Logical; add marginal rugs/histograms.
+#' @param ... Additional arguments passed to \code{heatMap()} when
+#'   \code{use_gg = FALSE}.
+#'
+#' @return Invisibly returns the plot object (when \code{use_gg = TRUE}) or
+#'   \code{NULL}.
+#' @export
+
+heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
+                     use_gg = FALSE, scale = FALSE, log = FALSE,
+                     includeMarginals = FALSE, ...){
+  mat <- as.matrix(mat)
+  if(scale){
+    mat <- scale(mat)
+  }
+  if(log){
+    mat <- log(mat)
+  }
+
+  if(use_gg){
+    if(!requireNamespace("ggplot2", quietly = TRUE)){
+      stop("Package 'ggplot2' is required for use_gg = TRUE")
+    }
+    df <- as.data.frame(as.table(mat))
+    df$Var1 <- factor(df$Var1,
+                      levels = rev(seq_len(nrow(mat))),
+                      labels = rev(if(is.null(row_labels)) rownames(mat) else row_labels))
+    df$Var2 <- factor(df$Var2,
+                      levels = seq_len(ncol(mat)),
+                      labels = if(is.null(col_labels)) colnames(mat) else col_labels)
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = Var2, y = Var1, fill = Freq)) +
+      ggplot2::geom_tile() +
+      ggplot2::scale_y_discrete(limits = rev(levels(df$Var1))) +
+      ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
+      ggplot2::labs(x = NULL, y = NULL)
+    if(includeMarginals && requireNamespace("ggExtra", quietly = TRUE)){
+      p <- ggExtra::ggMarginal(p, type = "histogram")
+    }
+    print(p)
+    return(invisible(p))
+  }
+
+  heatMap(x = rep(seq_len(ncol(mat)), each = nrow(mat)),
+          y = rep(seq_len(nrow(mat)), times = ncol(mat)),
+          z = as.vector(mat),
+          N = max(ncol(mat), nrow(mat)),
+          yaxt = row_labels,
+          includeMarginals = includeMarginals,
+          ...)
+  if(!is.null(col_labels)){
+    axis(1, at = seq(0, 1, length.out = ncol(mat)), labels = col_labels, las = 1)
+  }
+  invisible(NULL)
+}
+
 #' Summarise each column of a data frame
 #'
 #' Numeric columns are replaced by their mean while non-numeric columns are
