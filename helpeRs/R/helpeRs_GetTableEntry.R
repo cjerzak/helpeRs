@@ -1,29 +1,76 @@
-#' Extract regression results as a table row
+#' Extract regression results as a formatted table row
 #'
-#' Builds a one-row data frame containing coefficient estimates and summary
-#' statistics from a fitted model.  Clustered or bootstrap standard errors can
-#' be used if requested.
+#' Builds a one-row data frame containing coefficient estimates, standard errors
+#' or t-statistics, significance stars, and summary statistics from a fitted model.
+#' Supports both analytical standard errors (including clustered and
+#' heteroskedasticity-robust) and bootstrap-based inference.
 #'
-#' @param my_lm A fitted model object.
-#' @param clust_id Optional name of the clustering variable for clustered
-#'   standard errors.
-#' @param iv_round Number of digits to round estimates and statistics.
-#' @param NAME Column name to use for the resulting row.
-#' @param iv Logical; set to `TRUE` for instrumental variable models to include
-#'   diagnostic statistics.
-#' @param inParens Either "tstat" (default) or "se" indicating whether t-statistics
-#'   or standard errors should be placed in parentheses.
-#' @param seType Type of standard error.  Either "analytical" or "boot" for
-#'   bootstrap.
-#' @param bootDataLocation Folder containing bootstrap replications.
-#' @param bootDataNameTag File prefix for bootstrap data.
-#' @param bootFactorVars Character vector of factor variables to treat as factors
-#'   when bootstrapping.
-#' @param bootExcludeCovars Variables to exclude when bootstrapping.
-#' @param superunit_covariateName Name of the grouping variable used to count
-#'   higher level units.
-#' @param superunit_label Label to display for the super-unit count.
-#' @return A one-row data frame with formatted coefficients and metadata.
+#' The output format is designed for downstream processing by \code{\link{Tables2Tex}},
+#' with coefficients formatted as "estimate (stat)*" where stat is either the
+#' t-statistic or standard error (controlled by \code{inParens}), and * indicates
+#' p < 0.05.
+#'
+#' @param my_lm A fitted model object (typically from \code{lm()}, \code{glm()},
+#'   or \code{ivreg()}). The data used to fit the model must be a data.frame.
+#' @param clust_id Character string giving the name of the clustering variable
+#'   for clustered standard errors. If \code{NULL}, heteroskedasticity-robust
+#'   standard errors (HC1) are used instead.
+#' @param iv_round Integer specifying the number of decimal places for rounding
+#'   estimates and statistics. Default is 2.
+#' @param NAME Character string used as the column name for the resulting row.
+#'   Default is an empty string.
+#' @param iv Logical; if \code{TRUE}, includes instrumental variable diagnostic
+#'   statistics (Weak instruments and Wu-Hausman tests) in the output. Only
+#'   applicable for models fitted with \code{ivreg()}. Default is \code{FALSE}.
+#' @param inParens Character string specifying what to display in parentheses:
+#'   \code{"tstat"} (default) for t-statistics or \code{"se"} for standard errors.
+#' @param seType Character string specifying the type of standard errors:
+#'   \code{"analytical"} (default) uses sandwich estimators, \code{"boot"} uses
+#'   bootstrap standard errors from pre-computed replications on disk.
+#' @param bootDataLocation Character string giving the folder path containing
+#'   bootstrap replication datasets. Only used when \code{seType = "boot"}.
+#' @param bootDataNameTag Character string giving the file name prefix for bootstrap
+#'   data files. Files should be named \code{{bootDataNameTag}_0.csv} for the
+#'   original data and \code{{bootDataNameTag}_1.csv}, etc. for replications.
+#' @param bootFactorVars Character vector of variable names to treat as factors
+#'   during bootstrap estimation.
+#' @param bootExcludeCovars Character vector of covariate names to exclude from
+#'   the imputation step during bootstrap processing.
+#' @param keepCoef1 Logical; if \code{TRUE}, includes the first coefficient
+#'   (typically the intercept) in the output. Default is \code{FALSE}.
+#' @param superunit_covariateName Character string giving the name of the variable
+#'   used to count higher-level units (e.g., countries in panel data). Default
+#'   is \code{"country"}.
+#' @param superunit_label Character string used as the row label for the
+#'   higher-level unit count in the output table. Default is \code{"Countries"}.
+#'
+#' @return A one-row data frame where each column corresponds to a coefficient
+#'   or summary statistic. Columns include:
+#'   \itemize{
+#'     \item Formatted coefficient estimates with significance stars
+#'     \item Fit statistic (Adjusted R-squared for linear models, AIC for GLMs)
+#'     \item Number of observations
+#'     \item Count of higher-level units (e.g., countries)
+#'     \item IV diagnostics (if \code{iv = TRUE})
+#'   }
+#'
+#' @seealso \code{\link{Tables2Tex}} for generating complete LaTeX tables from
+#'   multiple models, \code{\link{vcovCluster}} for the clustered standard error
+#'   implementation
+#'
+#' @examples
+#' \dontrun{
+#' # Fit a simple linear model
+#' data(mtcars)
+#' fit <- lm(mpg ~ wt + hp, data = mtcars)
+#'
+#' # Extract with robust standard errors
+#' entry <- GetTableEntry(fit, clust_id = NULL, NAME = "Model 1")
+#'
+#' # Extract with clustered standard errors
+#' entry_clust <- GetTableEntry(fit, clust_id = "cyl", NAME = "Model 2")
+#' }
+#'
 #' @export
 
 GetTableEntry <- function(my_lm,
@@ -37,18 +84,19 @@ GetTableEntry <- function(my_lm,
                           bootDataNameTag = "Data",
                           bootFactorVars = NULL,
                           bootExcludeCovars = NULL,
+                          keepCoef1 = FALSE, 
                           superunit_covariateName = "country",
                           superunit_label = "Countries"
                           ){
   library( sandwich );library( lmtest ); ivDiagnostics <- NULL
   if(seType != "boot"){
     if(is.null(clust_id)){ 
-      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) )[-1,] }
-      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) ) }
+      if(length(coef(my_lm)) > 1 & !keepCoef1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) )[-1,] }
+      if(length(coef(my_lm)) == 1 | keepCoef1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovHC(my_lm, type = "HC1")) ) }
     }
     if(!is.null(clust_id)){ 
-      if(length(coef(my_lm)) > 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,] }
-      if(length(coef(my_lm)) == 1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id))) }
+      if(length(coef(my_lm)) > 1 & !keepCoef1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id)))[-1,] }
+      if(length(coef(my_lm)) == 1 | keepCoef1){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = (VCOV <- vcovCluster(my_lm, clust_id))) }
     }
     if("numeric" %in% class(my_summary)){my_summary<-t(my_summary);my_summary_orig<-t(my_summary_orig)}
     if(is.null(row.names(my_summary))){row.names(my_summary) <- row.names(coef(summary(my_lm)))[2]}
@@ -122,13 +170,19 @@ GetTableEntry <- function(my_lm,
       my_lm <- try(lm(formula_reconstruct,DatFinal_boot),T)
       if('try-error' %in% class(my_lm)){browser()}
     }
-    if(ncol(my_lm$model) > 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))[-1,]}
-    if(ncol(my_lm$model) == 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))}
+    if(is.null(clust_id)){
+      if(ncol(my_lm$model) > 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovHC(my_lm, type = "HC1"))[-1,]}
+      if(ncol(my_lm$model) == 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovHC(my_lm, type = "HC1"))}
+    }
+    if(!is.null(clust_id)){
+      if(ncol(my_lm$model) > 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))[-1,]}
+      if(ncol(my_lm$model) == 2){ my_summary <- my_summary_orig <- coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))}
+    }
     if("numeric" %in% class(my_summary)){my_summary<-t(my_summary)}
     if("numeric" %in% class(my_summary_orig)){my_summary_orig<-t(my_summary_orig)}
     if(is.null(row.names(my_summary))){row.names(my_summary) <- row.names(coef(summary(my_lm)))[2]}
 
-    boot_pool <- boot_pool[boot_pool!="DatFinal_0.csv"]
+    boot_pool <- boot_pool[boot_pool != sprintf("%s_0.csv", bootDataNameTag)]
     coef_mat  <- matrix(NA,ncol=nrow(my_summary),nrow=length(boot_pool))
     colnames(coef_mat) <- row.names( my_summary )
     counter___ <- 0; for(boot__ in boot_pool){

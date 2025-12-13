@@ -1,25 +1,58 @@
-#' Convert a stargazer table to a self-contained longtable.
+#' Convert a stargazer table to a self-contained longtable
 #'
-#' @param stargazer_text A character vector – the raw lines produced by
-#'   `stargazer()` (as captured with `capture.output()` or the browser() trick).
-#' @param fontsize       LaTeX font-size environment to wrap the table in
-#'                       (e.g. "footnotesize", "scriptsize").
-#' @param continued_note Logical.  If TRUE (default) add the
-#'                       "(Continued from previous page)" banner that longtable
-#'                       prints *only* on page ≥ 2.  Set to FALSE if you do not
-#'                       want that banner at all.
+#' Transforms the LaTeX output from \code{\link[stargazer]{stargazer}} into a
+#' longtable environment suitable for multi-page regression tables. This function
+#' handles the conversion automatically, including header repetition on continued
+#' pages.
 #'
-#' @return A character vector ready to be `cat()`-ed into a .tex file.
-#' @export
+#' The function performs several transformations:
+#' \itemize{
+#'   \item Replaces \code{table} with \code{longtable} environment
+#'   \item Wraps content in the specified font size environment
+#'   \item Adds \code{\\endfirsthead} and \code{\\endhead} markers for header
+#'     repetition
+#'   \item Includes "(Continued from previous page)" note on subsequent pages
+#'   \item Removes incompatible stargazer formatting directives
+#' }
+#'
+#' @param stargazer_text Character vector containing the raw lines produced by
+#'   \code{stargazer()} (typically captured with \code{capture.output()}).
+#' @param fontsize Character string specifying the LaTeX font size environment
+#'   to wrap the table in. Common values include \code{"footnotesize"},
+#'   \code{"scriptsize"}, or \code{"tiny"}. Default is \code{"footnotesize"}.
+#'
+#' @return A character vector of LaTeX code ready to be written to a .tex file
+#'   using \code{write()} or \code{cat()}.
+#'
+#' @section LaTeX Requirements:
+#' The output requires the \code{longtable} package in your LaTeX preamble:
+#' \preformatted{\\usepackage{longtable}}
+#'
+#' @seealso \code{\link{Tables2Tex}} which calls this function internally,
+#'   \code{\link{FullTransformer}} for table cleaning before conversion
 #'
 #' @examples
-#' tex_lines <- Stargazer2FullTable(stargazer_text)
-#' cat(tex_lines, file = "table.tex", sep = "\n")
+#' \dontrun{
+#' # Capture stargazer output and convert to longtable
+#' library(stargazer)
+#' fit <- lm(mpg ~ wt + hp, data = mtcars)
+#' sg_output <- capture.output(stargazer(fit))
+#'
+#' # Convert to longtable format
+#' lt_output <- Stargazer2FullTable(sg_output, fontsize = "scriptsize")
+#'
+#' # Write to file
+#' write(lt_output, file = "full_table.tex")
+#' }
+#'
+#' @export
 #' 
 Stargazer2FullTable <- function(stargazer_text, fontsize = "footnotesize"){
   stargazer_text_orig <- stargazer_text
-  stargazer_text = sapply(stargazer_text,function(sa)gsub(sa,pattern="\\[!htbp\\]",replace=""), USE.NAMES = FALSE)
-  stargazer_text = sapply(stargazer_text,function(sa)gsub(sa,pattern="\\\\centering",replace=""), USE.NAMES = FALSE)
+  stargazer_text = sapply(stargazer_text,function(sa) gsub(sa,pattern="\\[!htbp\\]",replace=""), 
+                          USE.NAMES = FALSE)
+  stargazer_text = sapply(stargazer_text,function(sa) gsub(sa,pattern="\\\\centering",replace=""), 
+                          USE.NAMES = FALSE)
   col_arrange <- stargazer_text[grepl(stargazer_text,pattern = "\\\\begin\\{tabular\\}")]
   pattern <- "\\\\begin\\{tabular\\}\\{.*?\\\\extracolsep\\{5pt\\}\\}\\s+(\\w+)"
   col_arrange <- sub(pattern, "\\1", col_arrange)
@@ -28,12 +61,14 @@ Stargazer2FullTable <- function(stargazer_text, fontsize = "footnotesize"){
   stargazer_text = sapply(stargazer_text,function(sa){gsub(sa, pattern="\\\\begin\\{table\\}",
                                                            replace= sprintf("\\\\begin\\{%s\\}
                                                             \\\\begin\\{longtable\\}\\{%s\\}",
-                                                                       fontsize, col_arrange))}, USE.NAMES = FALSE)
+                                                                       fontsize, col_arrange))},
+                          USE.NAMES = FALSE)
   stargazer_text = sapply(stargazer_text,function(sa){ gsub(sa,
                                                           pattern="\\\\end\\{table\\}",
                                                           replace=sprintf("\\\\end\\{longtable\\}
                                                             \\\\end\\{%s\\}", fontsize)
-                                                          ) } , USE.NAMES = FALSE)
+                                                          ) } , 
+                          USE.NAMES = FALSE)
   # see:
   # https://tex.stackexchange.com/questions/71549/how-can-i-repeat-the-header-but-not-the-caption-with-longtable
   stargazer_text  <- stargazer_text[!grepl(stargazer_text,pattern = "\\\\begin\\{tabular\\}")]

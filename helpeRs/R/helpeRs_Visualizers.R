@@ -1,22 +1,39 @@
-#' Plot a matrix as an image with optional axis labels
+#' Plot a matrix as an image with intuitive orientation
 #'
-#' This is a thin wrapper around [graphics::image()] that flips the matrix so
-#' the first row is shown at the top of the plot.  Axis tick labels can be
-#' supplied via `xaxt` and `yaxt`.
+#' A wrapper around \code{\link[graphics]{image}} that displays matrices with
+#' the conventional orientation (first row at top, first column at left). The
+#' base \code{image()} function displays matrices transposed and flipped, which
+#' can be confusing. This function corrects that behavior.
 #'
-#' @param mat Matrix to display.
-#' @param xaxt,yaxt Optional character vectors containing the x and y axis
-#'   labels.  If `NULL` no axis ticks are drawn.
-#' @param col Optional vector of colours passed to [graphics::image()].
-#' @param main Optional plot title.
-#' @param scale_vec Numeric vector controlling the placement of tick labels on
-#'   the x and y axes.
-#' @param cex.axis Character expansion for axis tick labels.
+#' @param mat Numeric matrix to display as a heat map image.
+#' @param xaxt Optional character vector of labels for the x-axis (columns).
+#'   If \code{NULL} (default), no x-axis labels are drawn.
+#' @param yaxt Optional character vector of labels for the y-axis (rows).
+#'   If \code{NULL} (default), no y-axis labels are drawn.
+#' @param col Optional vector of colors for the heat map. If \code{NULL},
+#'   uses the default \code{image()} color palette.
+#' @param main Optional character string for the plot title.
+#' @param scale_vec Numeric vector of length 2 controlling the placement scaling
+#'   of tick labels on the x and y axes. Default is \code{c(1, 1.04)}.
+#' @param cex.axis Numeric value for character expansion of axis tick labels.
+#'   Default is 1.
 #'
-#' @return Invisibly returns `NULL`. The function is called for its side effect
-#'   of producing a plot.
+#' @return Invisibly returns \code{NULL}. Called for its side effect of producing
+#'   a plot.
+#'
+#' @seealso \code{\link{heatmap2}} for a higher-level heat map function,
+#'   \code{\link{heatMap}} for interpolated heat maps from scattered data
+#'
+#' @examples
+#' # Create a simple matrix
+#' mat <- matrix(1:12, nrow = 3, ncol = 4)
+#' rownames(mat) <- c("A", "B", "C")
+#' colnames(mat) <- c("W", "X", "Y", "Z")
+#'
+#' # Plot with row/column labels
+#' image2(mat, xaxt = colnames(mat), yaxt = rownames(mat), main = "Example")
+#'
 #' @export
-
 image2 = function(mat,xaxt=NULL,yaxt = NULL,col=NULL,main=NULL,scale_vec=c(1,1.04),cex.axis = 1){
   # pretty plotting of 2D data
   image((t(mat)[,nrow(mat):1]),
@@ -25,39 +42,73 @@ image2 = function(mat,xaxt=NULL,yaxt = NULL,col=NULL,main=NULL,scale_vec=c(1,1.0
   if(!is.null(yaxt)){ axis(2, at = 0:(nrow(mat)-1)/nrow(mat)*scale_vec[2], tick=F,labels = rev(yaxt),cex.axis = cex.axis,las = 2)  }
 }
 
-#' Interpolate scattered data and draw a heat map
+#' Create an interpolated heat map from scattered data
 #'
-#' This helper uses the `fields` and `akima` packages to interpolate scattered
-#' `(x, y, z)` observations onto a regular grid and then visualises the result
-#' with `image.plot`.
+#' Interpolates irregularly-spaced \code{(x, y, z)} observations onto a regular
+#' grid using the \pkg{akima} package and visualizes the result using
+#' \code{\link[fields]{image.plot}} from the \pkg{fields} package. This is useful
+#' for visualizing relationships in data where observations are not on a regular
+#' grid.
 #'
-#' @param x,y,z Numeric vectors defining the coordinates and values to
-#'   interpolate.
-#' @param main Character string used as the plot title.
-#' @param N Number of grid cells in each direction passed to `interp`.
-#' @param yaxt Optional labels for the y axis; if `NULL` (default) labels are
-#'   omitted.
-#' @param xlab,ylab Axis labels passed to the plotting function.
-#' @param horizontal Logical; if `TRUE` draw the legend horizontally.
-#' @param useLog Character string specifying axes to be log-transformed
-#'   (e.g. `"xyz"`).
-#' @param legend.width Width of the colour legend.
-#' @param ylim,xlim,zlim Numeric vectors giving plot limits.
-#' @param add.legend Logical; if `FALSE` the legend is suppressed.
-#' @param legend.only Logical; if `TRUE` draw only the legend.
-#' @param vline,hline Optional positions of vertical or horizontal reference
-#'   lines.
-#' @param col_vline,col_hline Colours for the reference lines.
-#' @param cex.lab,cex.main Character expansion for axis labels and title.
-#' @param myCol Optional colour palette.
-#' @param includeMarginals Logical; add 1D marginal rugs if `TRUE`.
-#' @param marginalJitterSD_x,marginalJitterSD_y Numeric jitter amounts used when
-#'   drawing marginals.
-#' @param openBrowser Logical; if `TRUE` enters debug mode via `browser()`.
+#' @param x,y,z Numeric vectors of equal length defining the coordinates and
+#'   values to interpolate. \code{x} and \code{y} are the spatial coordinates,
+#'   \code{z} is the value at each location.
+#' @param main Character string for the plot title. Default is empty.
+#' @param N Integer specifying the number of grid cells in each direction for
+#'   interpolation. Higher values produce smoother plots but take longer.
+#' @param yaxt Optional character vector of labels for the y-axis. If \code{NULL}
+#'   (default), numeric axis labels are used.
+#' @param xlab,ylab Character strings for axis labels. Default is empty.
+#' @param horizontal Logical; if \code{TRUE}, draw the color legend horizontally
+#'   below the plot. Default is \code{FALSE} (vertical legend on right).
+#' @param useLog Character string specifying which axes to log-transform.
+#'   Can include \code{"x"}, \code{"y"}, and/or \code{"z"} (e.g., \code{"xyz"}
+#'   for all axes). Default is empty (no log transformation).
+#' @param legend.width Numeric value controlling the width of the color legend.
+#'   Default is 1.
+#' @param xlim,ylim,zlim Numeric vectors of length 2 giving the plot limits for
+#'   each axis. If \code{NULL} (default), limits are computed from the data.
+#' @param add.legend Logical; if \code{FALSE}, the color legend is suppressed.
+#'   Default is \code{TRUE}.
+#' @param legend.only Logical; if \code{TRUE}, draw only the legend without the
+#'   main plot. Useful for creating custom layouts. Default is \code{FALSE}.
+#' @param vline,hline Numeric values specifying positions of vertical or
+#'   horizontal reference lines. Default is \code{NULL} (no lines).
+#' @param col_vline,col_hline Colors for the reference lines. Default is
+#'   \code{"black"}.
+#' @param cex.lab,cex.main Numeric values for character expansion of axis labels
+#'   and title. Default is 2 for both.
+#' @param myCol Optional color palette vector. If \code{NULL}, uses the default
+#'   \code{image.plot} palette.
+#' @param includeMarginals Logical; if \code{TRUE}, adds 1D marginal rug plots
+#'   showing the distribution of x and y values. Default is \code{FALSE}.
+#' @param marginalJitterSD_x,marginalJitterSD_y Numeric values controlling the
+#'   amount of jitter applied to marginal points, as a fraction of the standard
+#'   deviation. Default is 0.01.
+#' @param openBrowser Logical; if \code{TRUE}, enters debug mode via
+#'   \code{browser()} for interactive inspection. Default is \code{FALSE}.
 #'
-#' @return Invisibly returns `NULL`.  Called for its plotting side effect.
+#' @return Invisibly returns \code{NULL}. Called for its side effect of producing
+#'   a plot.
+#'
+#' @seealso \code{\link{heatmap2}} for plotting matrices directly,
+#'   \code{\link{MakeHeatMap}} for model-based prediction heat maps,
+#'   \code{\link[fields]{image.plot}} for the underlying plotting function
+#'
+#' @examples
+#' \dontrun{
+#' # Create some scattered data
+#' set.seed(42)
+#' x <- runif(100, 0, 10)
+#' y <- runif(100, 0, 10)
+#' z <- sin(x) * cos(y) + rnorm(100, sd = 0.1)
+#'
+#' # Plot as interpolated heat map
+#' heatMap(x, y, z, N = 50, main = "Example Heat Map",
+#'         xlab = "X Variable", ylab = "Y Variable")
+#' }
+#'
 #' @export
-
 heatMap <- function(x, y, z,
                     main = "",
                     N,yaxt = NULL,
@@ -114,25 +165,56 @@ heatMap <- function(x, y, z,
   }
 }
 
-#' Quick heat map of a matrix
+#' Quick heat map visualization of a matrix
 #'
-#' Provides a convenience wrapper around \code{heatMap()} for fast
-#' visualisation of matrix-like objects. Optionally uses \pkg{ggplot2}
-#' for a polished appearance.
+#' A convenience wrapper around \code{\link{heatMap}} for fast visualization of
+#' matrix-like objects. Can use either base R graphics or \pkg{ggplot2} for a
+#' more polished appearance.
 #'
-#' @param mat Matrix or data frame to plot.
-#' @param row_labels,col_labels Optional row and column tick labels.
-#' @param use_gg Logical; if \code{TRUE} return a \pkg{ggplot2} object.
-#' @param scale Logical; standardise values before plotting.
-#' @param log Logical; log-transform values before plotting.
-#' @param includeMarginals Logical; add marginal rugs/histograms.
-#' @param ... Additional arguments passed to \code{heatMap()} when
+#' When \code{use_gg = TRUE}, the function creates a tile plot using
+#' \code{\link[ggplot2]{geom_tile}} with a white-to-steelblue gradient. Marginal
+#' histograms can be added using \pkg{ggExtra} if available.
+#'
+#' @param mat Numeric matrix or data frame to visualize. Will be coerced to a
+#'   matrix if necessary.
+#' @param row_labels Optional character vector of labels for rows. If \code{NULL}
+#'   (default), uses \code{rownames(mat)}.
+#' @param col_labels Optional character vector of labels for columns. If
+#'   \code{NULL} (default), uses \code{colnames(mat)}.
+#' @param use_gg Logical; if \code{TRUE}, creates a \pkg{ggplot2} plot instead
+#'   of using base graphics. Requires the \pkg{ggplot2} package. Default is
+#'   \code{FALSE}.
+#' @param scale Logical; if \code{TRUE}, standardizes values (subtracts mean,
+#'   divides by SD) before plotting. Default is \code{FALSE}.
+#' @param log Logical; if \code{TRUE}, applies natural log transformation to
+#'   values before plotting. Default is \code{FALSE}.
+#' @param includeMarginals Logical; if \code{TRUE} and \code{use_gg = TRUE},
+#'   adds marginal histograms using \pkg{ggExtra}. For base graphics, adds
+#'   marginal rug plots. Default is \code{FALSE}.
+#' @param ... Additional arguments passed to \code{\link{heatMap}} when
 #'   \code{use_gg = FALSE}.
 #'
-#' @return Invisibly returns the plot object (when \code{use_gg = TRUE}) or
-#'   \code{NULL}.
+#' @return When \code{use_gg = TRUE}, invisibly returns the ggplot object.
+#'   Otherwise, invisibly returns \code{NULL}. Called for its side effect of
+#'   producing a plot.
+#'
+#' @seealso \code{\link{heatMap}} for the underlying scatter-to-grid
+#'   interpolation, \code{\link{image2}} for simple matrix plotting
+#'
+#' @examples
+#' # Create a correlation matrix
+#' cor_mat <- cor(mtcars[, 1:5])
+#'
+#' # Quick base R plot
+#' heatmap2(cor_mat, row_labels = colnames(cor_mat),
+#'          col_labels = colnames(cor_mat))
+#'
+#' \dontrun{
+#' # ggplot2 version
+#' heatmap2(cor_mat, use_gg = TRUE)
+#' }
+#'
 #' @export
-
 heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
                      use_gg = FALSE, scale = FALSE, log = FALSE,
                      includeMarginals = FALSE, ...){
@@ -180,16 +262,38 @@ heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
   invisible(NULL)
 }
 
-#' Summarise each column of a data frame
+#' Summarize each column of a data frame
 #'
-#' Numeric columns are replaced by their mean while non-numeric columns are
-#' replaced by their most common value.  This is mainly used when constructing
-#' prediction grids for plotting.
+#' Computes a single summary value for each column of a data frame. Numeric
+#' columns are summarized by their mean, while non-numeric columns are
+#' summarized by their mode (most frequent value). This is primarily used when
+#' constructing prediction grids for visualization, where you need representative
+#' values for variables not being varied.
 #'
-#' @param x A data frame.
-#' @return A vector of summary values with one entry per column of `x`.
+#' The function uses \code{\link{f2n}} internally to attempt numeric conversion,
+#' so factor columns with numeric-looking levels will be treated as numeric.
+#'
+#' @param x A data frame to summarize.
+#'
+#' @return A named vector with one element per column of \code{x}. Names
+#'   correspond to column names. Numeric summaries are means; non-numeric
+#'   summaries are the most frequent value.
+#'
+#' @seealso \code{\link{cols2numeric}} for converting columns to numeric,
+#'   \code{\link{MakeHeatMap}} which uses this function internally
+#'
+#' @examples
+#' # Summarize mtcars
+#' colSummmary(mtcars[, 1:4])
+#'
+#' # Mixed numeric and character columns
+#' df <- data.frame(
+#'   x = c(1, 2, 3, 4),
+#'   y = c("a", "b", "a", "a")
+#' )
+#' colSummmary(df)  # Returns mean of x and mode of y
+#'
 #' @export
-#' 
 colSummmary <- function(x){ 
   apply(x,2,function(x_){
     x_f2n <- f2n(x_)
@@ -200,13 +304,35 @@ colSummmary <- function(x){
 
 #' Convert data frame columns to numeric when possible
 #'
-#' Attempts to coerce each column of a data frame to numeric.  Columns that
-#' cannot be coerced are left unchanged.
+#' Attempts to coerce each column of a data frame to numeric using
+#' \code{\link{f2n}}. Columns that cannot be coerced (i.e., result in all
+#' \code{NA} values) are left unchanged. This is useful for cleaning data
+#' where numeric values may be stored as factors or character strings.
 #'
-#' @param x A data frame.
-#' @return A data frame with the same shape as `x`.
+#' @param x A data frame to process.
+#'
+#' @return A data frame with the same dimensions as \code{x}. Columns that
+#'   could be converted to numeric are returned as numeric; others retain
+#'   their original type.
+#'
+#' @seealso \code{\link{f2n}} for converting individual vectors,
+#'   \code{\link{colSummmary}} for summarizing columns
+#'
+#' @examples
+#' # Data frame with mixed types
+#' df <- data.frame(
+#'   a = factor(c("1.5", "2.5", "3.5")),
+#'   b = c("x", "y", "z"),
+#'   c = c(1, 2, 3),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' # Convert what can be converted
+#' df_numeric <- cols2numeric(df)
+#' sapply(df_numeric, class)
+#' # a becomes numeric, b stays character, c stays numeric
+#'
 #' @export
-
 cols2numeric <- function(x){ 
   apply(x,2,function(x_){
     x_f2n <- f2n(x_)
@@ -215,28 +341,65 @@ cols2numeric <- function(x){
     return( x_ ) })
 }
 
-#' Visualise a two-way predictor effect as a heat map
+#' Visualize two-way predictor effects as a heat map
 #'
-#' Creates a grid over the ranges of two predictor variables and uses a fitted
-#' model to predict the outcome on that grid.  The predictions are then plotted
-#' with [heatMap()] and saved to `pdf_path`.
+#' Creates a prediction surface showing how the expected outcome varies across
+#' a grid of two predictor variables, holding all other predictors at their
+#' mean (numeric) or mode (categorical) values. The result is saved as a PDF
+#' file.
 #'
-#' @param factor1,factor2 Names of the predictor variables to vary.
-#' @param outcome Name of the outcome variable.
-#' @param dat Data frame used to fit the model.
-#' @param lm_obj Fitted linear model object.
-#' @param pdf_path File path to save the resulting heat map.
-#' @param extrap_factor1,extrap_factor2 Multipliers controlling how far beyond
-#'   the data range the grid should extend.
-#' @param useLog Character string specifying axes to log-transform.
-#' @param OUTCOME_SCALER Multiplicative factor applied to predicted values.
-#' @param OutcomeTransformFxn Function applied to predictions before plotting.
-#' @param openBrowser Logical; if `TRUE` pauses execution via `browser()` for
-#'   interactive inspection.
+#' The function uses \code{\link{colSummmary}} to compute representative values
+#' for predictors not being varied, then generates predictions across a 50x50
+#' grid spanning the ranges of the two focal predictors. The predictions are
+#' visualized using \code{\link{heatMap}} with the \pkg{viridis} color palette.
 #'
-#' @return Invisibly returns `NULL`. The heat map is written to `pdf_path`.
+#' @param factor1,factor2 Character strings giving the names of the two
+#'   predictor variables to vary. These must be columns in \code{dat}.
+#' @param outcome Character string giving the name of the outcome variable.
+#'   Used only for excluding from the summary computation.
+#' @param dat Data frame containing the data used to fit the model. Used to
+#'   determine variable ranges and compute summary values.
+#' @param lm_obj Fitted linear model object (from \code{lm()} or similar) used
+#'   for generating predictions.
+#' @param pdf_path Character string giving the file path where the PDF plot
+#'   will be saved.
+#' @param extrap_factor1,extrap_factor2 Numeric multipliers controlling how far
+#'   beyond the observed data range the prediction grid extends. Values > 1
+#'   extrapolate beyond the data; values < 1 restrict to a subset of the range.
+#'   Default is 1 (exact data range).
+#' @param useLog Character string specifying which axes to log-transform.
+#'   Can include \code{"x"}, \code{"y"}, and/or \code{"z"}. Default is empty
+#'   (no transformation).
+#' @param OUTCOME_SCALER Numeric value by which predictions are multiplied
+#'   before plotting. Useful for unit conversions. Default is 1.
+#' @param OutcomeTransformFxn Function applied to predictions before scaling.
+#'   Default is the identity function \code{function(x) x}.
+#' @param openBrowser Logical; if \code{TRUE}, pauses execution via
+#'   \code{browser()} for interactive debugging. Default is \code{FALSE}.
+#'
+#' @return Invisibly returns \code{NULL}. The function is called for its side
+#'   effect of writing a PDF file to \code{pdf_path}.
+#'
+#' @seealso \code{\link{heatMap}} for the underlying plotting function,
+#'   \code{\link{colSummmary}} for computing representative predictor values
+#'
+#' @examples
+#' \dontrun{
+#' # Fit a model
+#' fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+#'
+#' # Create heat map of mpg as function of wt and hp
+#' MakeHeatMap(
+#'   factor1 = "wt",
+#'   factor2 = "hp",
+#'   outcome = "mpg",
+#'   dat = mtcars,
+#'   lm_obj = fit,
+#'   pdf_path = "mpg_heatmap.pdf"
+#' )
+#' }
+#'
 #' @export
-
 MakeHeatMap <- function(factor1, factor2, outcome, dat, lm_obj, pdf_path, 
                         extrap_factor1 = 1, extrap_factor2 = 1, 
                         useLog = "", OUTCOME_SCALER = 1, 

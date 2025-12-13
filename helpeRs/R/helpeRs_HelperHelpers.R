@@ -1,12 +1,42 @@
 #' Cluster-robust covariance matrix estimator
 #'
-#' Convenience wrapper that computes a clustered sandwich covariance matrix for
-#' a fitted model.
+#' Computes a clustered sandwich covariance matrix for a fitted model using the
+#' method of Arellano (1987). This provides standard errors that are robust to
+#' arbitrary within-cluster correlation.
 #'
-#' @param fm A fitted model object.
-#' @param clvar Name of the variable identifying clusters within `fm$model`.
+#' The function applies the degrees-of-freedom correction
+#' \eqn{(M/(M-1)) \times ((N-1)/(N-K))}{(M/(M-1)) * ((N-1)/(N-K))} where M is
+#' the number of clusters, N is the number of observations, and K is the number
+#' of parameters.
 #'
-#' @return A covariance matrix.
+#' @param fm A fitted model object (typically from \code{lm()} or \code{glm()}).
+#'   For \code{polr} models from \pkg{MASS}, predictions are handled specially.
+#' @param clvar Character string giving the name of the clustering variable.
+#'   This variable must exist in the data used to fit \code{fm}.
+#'
+#' @return A K x K covariance matrix where K is the number of model coefficients.
+#'
+#' @references
+#' Arellano, M. (1987). Computing Robust Standard Errors for Within-Groups
+#' Estimators. \emph{Oxford Bulletin of Economics and Statistics}, 49(4), 431-434.
+#'
+#' @seealso \code{\link{GetTableEntry}} which uses this function for clustered
+#'   standard errors, \code{\link[sandwich]{vcovHC}} for heteroskedasticity-robust
+#'   covariance without clustering
+#'
+#' @examples
+#' \dontrun{
+#' data(mtcars)
+#' fit <- lm(mpg ~ wt + hp, data = mtcars)
+#'
+#' # Cluster by number of cylinders
+#' V_clust <- vcovCluster(fit, "cyl")
+#'
+#' # Use with coeftest for clustered standard errors
+#' library(lmtest)
+#' coeftest(fit, vcov. = V_clust)
+#' }
+#'
 #' @export
 vcovCluster <- function(fm, clvar){
   # R-codes (www.r-project.org) for computing
@@ -27,82 +57,104 @@ vcovCluster <- function(fm, clvar){
   dfc <- (M/(M-1))*((N-1)/(N-K))
   uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum))
   vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
+  return(vcovCL)
 }
 
+#' Convert factors to numeric values
 #'
-#' @usage
+#' Converts a vector to numeric by first coercing to character. This is the
+#' correct way to extract numeric values from factors, as direct coercion with
+#' \code{as.numeric()} returns factor level indices rather than the underlying
+#' values.
 #'
-#' getTableEntry(...)
+#' @param x A vector to convert, typically a factor whose levels are numeric
+#'   strings (e.g., \code{factor(c("1.5", "2.3", "3.1"))}).
 #'
-#' @param x Description
+#' @return A numeric vector. Values that cannot be coerced to numeric become
+#'   \code{NA} with a warning.
 #'
-#' @return `z` Description
-#' @export
-#'
-#' @details `getTableEntry` implements...
+#' @seealso \code{\link{cols2numeric}} for converting multiple columns of a
+#'   data frame
 #'
 #' @examples
+#' # Factor with numeric levels
+#' x <- factor(c("1.5", "2.3", "3.1"))
 #'
-#' # Perform analysis
-#' TableEntry <- getTableEntry()
+#' # Wrong way - returns level indices (1, 2, 3)
+#' as.numeric(x)
 #'
-#' print( TableEntry )
-#' Convert factors to numeric
+#' # Correct way - returns actual values
+#' f2n(x)  # Returns c(1.5, 2.3, 3.1)
 #'
-#' Converts its input to character and then numeric.  Useful when working with
-#' factors that actually encode numeric values.
-#'
-#' @param x A vector to convert.
-#' @return A numeric vector.
 #' @export
 f2n <- function(x){as.numeric(as.character(x))}
 
 #' Widen margins in a LaTeX table string
 #'
-#' Adds a small horizontal shift to both margins of a table by inserting the
-#' `adjustwidth` environment from the *ragged2e* package.
+#' Adds horizontal margin adjustments to a LaTeX table by wrapping the table
+#' content in an \code{adjustwidth} environment from the \pkg{ragged2e} package.
+#' This is useful when tables are too wide to fit within standard margins.
 #'
-#' @param x Character vector containing the LaTeX table.
-#' @return Modified character vector.
+#' The function extends margins by 0.5 inches on each side, effectively allowing
+#' the table to be 1 inch wider than the text width.
+#'
+#' @param x Character vector containing the LaTeX table code, typically the
+#'   output from \code{\link[stargazer]{stargazer}} or \code{\link{Tables2Tex}}.
+#'
+#' @return A character vector with the modified LaTeX code. The \code{adjustwidth}
+#'   environment is inserted inside the \code{table} environment.
+#'
+#' @section LaTeX Requirements:
+#' The output requires the \pkg{ragged2e} package in your LaTeX preamble:
+#' \preformatted{\\usepackage{ragged2e}}
+#'
+#' @seealso \code{\link{Tables2Tex}} for generating LaTeX tables
+#'
+#' @examples
+#' \dontrun{
+#' # Read an existing table and widen its margins
+#' tex_lines <- readLines("my_table.tex")
+#' tex_wide <- WidenMargins(tex_lines)
+#' writeLines(tex_wide, "my_table_wide.tex")
+#' }
+#'
 #' @export
 WidenMargins <- function(x){
   x = gsub(x,  pattern="\\\\begin\\{table\\}\\[htbp\\]",
            replace="\\\\begin\\{table\\}[htbp]\\\\begin\\{adjustwidth\\}\\{-.5in\\}\\{-.5in\\}")
   x = gsub(x,  pattern="\\\\end\\{table\\}",
            replace="\\\\end\\{adjustwidth\\}\\\\end\\{table\\}")
-}
-
-vcovCluster <- function(fm, clvar){
-  # R-codes (www.r-project.org) for computing
-  # clustered-standard errors. Mahmood Arai, Jan 26, 2008.
-  # The arguments of the function are:
-  # fitted model, cluster1 and cluster2
-  # You need to install libraries `sandwich' and `lmtest'
-  x <- eval(fm$call$data, envir = parent.frame())
-  if ("polr" %in% class(fm)) {
-    require(MASS)
-    cluster <- x[rownames(predict(fm, type = "probs")), clvar]
-  } else {
-    cluster <- x[names(predict(fm)), clvar]
-  }
-  M <- length(unique(cluster))
-  N <- length(cluster)
-  K <- dim(vcov(fm))[1]
-  dfc <- (M/(M-1))*((N-1)/(N-K))
-  uj  <- apply(estfun(fm),2, function(x) tapply(x, cluster, sum));
-  vcovCL <- dfc*sandwich(fm, meat=crossprod(uj)/N)
+  return(x)
 }
 
 #' Ensure numbers have a fixed number of decimal places
 #'
-#' Pads numeric strings with trailing zeros so that all have exactly `roundAt`
-#' digits after the decimal point.
+#' Pads numeric strings with trailing zeros so that all values have exactly
+#' \code{roundAt} digits after the decimal point. This ensures consistent
+#' formatting in regression tables where column alignment matters.
 #'
-#' @param zr A character or numeric vector to process.
-#' @param roundAt Integer; desired number of decimal places.
-#' @return A character vector with padded values.
+#' @param zr A character or numeric vector to process. Numeric values are first
+#'   converted to character.
+#' @param roundAt Integer specifying the desired number of decimal places.
+#'   Default is 2.
+#'
+#' @return A character vector with values padded to have exactly \code{roundAt}
+#'   decimal places. Values without a decimal point receive one followed by
+#'   the appropriate number of zeros.
+#'
+#' @seealso \code{\link{GetTableEntry}} which uses this function to format
+#'   coefficient estimates
+#'
+#' @examples
+#' # Pad to 2 decimal places (default)
+#' fixZeroEndings(c("1.5", "2", "3.14"))
+#' # Returns: c("1.50", "2.00", "3.14")
+#'
+#' # Pad to 3 decimal places
+#' fixZeroEndings(c(1.5, 2.33, 3), roundAt = 3)
+#' # Returns: c("1.500", "2.330", "3.000")
+#'
 #' @export
-
 fixZeroEndings <- function(zr,roundAt=2){
   unlist( lapply(strsplit(as.character(zr),split="\\."),function(l_){
     if(length(l_) == 1){ retl <- paste(l_, paste(rep("0",times=roundAt),collapse=""),sep=".") }
@@ -142,14 +194,24 @@ cleanStars <- function(zer){
   zer <- gsub(zer,pattern="space5",replace=" ")
   zer <- gsub(zer,pattern="spaceX",replace=" ")
   names(zer) <- NULL
-  captionIndices <- grep(zer,pattern="caption\\{"):(grep(zer,pattern="label\\{"))
-  insertCaptionAfter <- grep(zer,pattern="end\\{tabular")
 
-  # re-order so captions are at bottom of table
-  zer <- c(zer[1:(min(captionIndices)-1)],
-           zer[(max(captionIndices)+1):(insertCaptionAfter)],
-           zer[captionIndices],
-           zer[(insertCaptionAfter+1):length(zer)])
+  # Find required pattern indices
+  captionIdx <- grep(zer, pattern = "caption\\{")
+  labelIdx <- grep(zer, pattern = "label\\{")
+  insertCaptionAfter <- grep(zer, pattern = "end\\{tabular")
+
+
+  # Only re-order if all required patterns are found
+  if (length(captionIdx) > 0 && length(labelIdx) > 0 && length(insertCaptionAfter) > 0) {
+    captionIndices <- captionIdx[1]:labelIdx[1]
+    insertCaptionAfter <- insertCaptionAfter[1]
+
+    # re-order so captions are at bottom of table
+    zer <- c(zer[1:(min(captionIndices)-1)],
+             zer[(max(captionIndices)+1):(insertCaptionAfter)],
+             zer[captionIndices],
+             zer[(insertCaptionAfter+1):length(zer)])
+  }
   return( zer )
 }
 

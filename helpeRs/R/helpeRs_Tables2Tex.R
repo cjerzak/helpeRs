@@ -1,29 +1,94 @@
-#' Generate publication-ready regression tables
+#' Generate publication-ready regression tables in LaTeX
 #'
 #' Collates a list of regression model objects, extracts their coefficient
-#' tables via [GetTableEntry()] and writes LaTeX files using
-#' [stargazer::stargazer()].  Optionally, a full table of all covariates is
-#' produced in addition to a condensed version.
+#' estimates and statistics via \code{\link{GetTableEntry}}, and writes
+#' publication-ready LaTeX table files using \code{\link[stargazer]{stargazer}}.
 #'
-#' @param reg_list A list of fitted model objects or character strings giving
-#'   objects to evaluate.
-#' @param clust_id Optional name of the clustering variable.
-#' @param seType Type of standard errors: either "analytical" or "boot".
-#' @param checkmark_list Optional list of binary indicators to add check-marks.
-#' @param addrow_list Optional named list of additional rows to append.
-#' @param saveFolder Folder in which to write the LaTeX files.
-#' @param nameTag Base name for generated files.
-#' @param saveFull Logical; if `TRUE` also produce the full table.
-#' @param tabCaption Caption to use for the condensed table.
-#' @param model.names Optional vector of model column headings.
-#' @param NameConversionMat Optional two-column matrix used to rename row labels.
-#' @param DoFullTableKey Logical; if `TRUE` mention the full table in the caption.
-#' @param superunit_covariateName Variable used to count higher level units.
-#' @param superunit_label Label for that count in the table footnotes.
-#' @param font.size, font.size.full Font sizes passed to stargazer for the short
-#'   and full tables respectively.
+#' This is the main user-facing function for the regression table workflow.
+#' It produces two outputs:
+#' \enumerate{
+#'   \item A condensed table showing only the covariates specified in
+#'     \code{NameConversionMat} (or all if \code{NULL})
+#'   \item A full table (if \code{saveFull = TRUE}) containing all coefficients
+#'     in longtable format for multi-page output
+#' }
 #'
-#' @return Invisibly returns `NULL`.  LaTeX files are written to `saveFolder`.
+#' @param reg_list A list of fitted model objects, or a character vector of
+#'   object names to evaluate. Models should be fitted using \code{lm()},
+#'   \code{glm()}, or \code{ivreg()}. The data argument to these models
+#'   must be a data.frame (not a matrix or tibble).
+#' @param clust_id Character string giving the name of the clustering variable
+#'   for clustered standard errors, or \code{NULL} for heteroskedasticity-robust
+#'   standard errors.
+#' @param seType Character string specifying the type of standard errors:
+#'   \code{"analytical"} (default) or \code{"boot"} for bootstrap.
+#' @param checkmark_list Optional named list of binary vectors indicating which
+#'   models include certain features. Names become row labels, values of 1
+#'   produce checkmarks in the table.
+#' @param addrow_list Optional named list of vectors to append as additional
+#'   rows to the table. Each list element becomes a row with the element name
+#'   as the row label.
+#' @param saveFolder Character string giving the folder path where LaTeX files
+#'   will be written. Default is the current directory.
+#' @param nameTag Character string used as the base name for output files.
+#'   Files are named \code{tab{nameTag}_SE{seType}.tex} and
+#'   \code{FULL_tab{nameTag}_SE{seType}.tex}.
+#' @param saveFull Logical; if \code{TRUE} (default), also produces a full table
+#'   containing all coefficients using the longtable environment.
+#' @param tabCaption Character string for the table caption.
+#' @param model.names Optional character vector of column headings for each model.
+#'   If \code{NULL}, defaults to "Model 1", "Model 2", etc.
+#' @param NameConversionMat Optional two-column matrix for filtering and renaming
+#'   row labels. Column 1 contains regex patterns to match, column 2 contains
+#'   replacement names. Rows not matching any pattern are dropped from the
+#'   condensed table (but retained in the full table).
+#' @param DoFullTableKey Logical; if \code{TRUE} (default), adds a reference to
+#'   the full table in the condensed table's caption.
+#' @param superunit_covariateName Character string giving the variable name used
+#'   to count higher-level units (e.g., \code{"country"} for panel data).
+#' @param superunit_label Character string for the row label showing the count
+#'   of higher-level units. Default is \code{"Countries"}.
+#' @param font.size Character string specifying the LaTeX font size for the
+#'   condensed table (e.g., \code{"footnotesize"}, \code{"scriptsize"}).
+#' @param inParens Character string specifying what to display in parentheses:
+#'   \code{"tstat"} (default) or \code{"se"} for standard errors.
+#' @param keepCoef1 Logical; if \code{TRUE}, includes the first coefficient
+#'   (typically the intercept) in the output. Default is \code{FALSE}.
+#' @param font.size.full Character string specifying the LaTeX font size for
+#'   the full table. Default is \code{"footnotesize"}.
+#'
+#' @return Invisibly returns \code{NULL}. The function is called for its side
+#'   effect of writing LaTeX files to \code{saveFolder}.
+#'
+#' @section LaTeX Requirements:
+#' The generated tables require the following LaTeX packages:
+#' \itemize{
+#'   \item \code{longtable} for full tables
+#'   \item \code{amssymb} for checkmark symbols
+#' }
+#'
+#' @seealso \code{\link{GetTableEntry}} for extracting individual model results,
+#'   \code{\link{FullTransformer}} for table cleaning,
+#'   \code{\link{Stargazer2FullTable}} for longtable conversion
+#'
+#' @examples
+#' \dontrun{
+#' # Fit multiple models
+#' fit1 <- lm(mpg ~ wt, data = mtcars)
+#' fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+#' fit3 <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+#'
+#' # Generate tables
+#' Tables2Tex(
+#'   reg_list = list(fit1, fit2, fit3),
+#'   clust_id = NULL,
+#'   saveFolder = "./tables/",
+#'   nameTag = "MPG_Models",
+#'   tabCaption = "Determinants of Fuel Efficiency",
+#'   model.names = c("Base", "Controls", "Full")
+#' )
+#' }
+#'
 #' @export
 
 Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
@@ -33,13 +98,15 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                        superunit_covariateName = "country", 
                        superunit_label = "Countries", 
                        font.size = "footnotesize", inParens = "tstat",
+                       keepCoef1 = FALSE, # usually intercept 
                        font.size.full = "footnotesize"){
-  print2("Processing R tables...")
+  print2("Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]")
   for(i in 1:length(reg_list)){
     if("character" %in% class(reg_list)){
       eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s',
                                 seType = seType, inParens = inParens, 
                                 superunit_covariateName = superunit_covariateName,
+                                keepCoef1 = keepCoef1, 
                                 superunit_label = superunit_label)",
                               i, reg_list[i], clust_id)))
     }
@@ -47,13 +114,17 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
       eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = %s, 
                                 seType = seType, inParens = inParens,
                                 superunit_covariateName = superunit_covariateName,
+                                keepCoef1 = keepCoef1, 
                                 superunit_label = superunit_label)",
-                                i, ifelse(is.null(clust_id), yes = "NULL", no = paste0("'",clust_id,"'"))) ))
+                                i, ifelse(is.null(clust_id), 
+                                          yes = "NULL", 
+                                          no = paste0("'",clust_id,"'"))) ))
     }
   }
   
   t_ <- eval(parse(text = sprintf("t(plyr::rbind.fill(%s))",
-                                  paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  )); t_[is.na(t_)] <- ""
+                                  paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  ))
+  t_[is.na(t_)] <- ""
   t_FULL <- t_
 
   print2("Performing name re-writes...")
@@ -114,7 +185,7 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                                                          label = TAB_LAB,
                                                          font.size = font.size,
                                                          title = sprintf("%s %s", tabCaption, fullModelInfo ))) )
-  names(stargazer_text)<-NULL
+  names(stargazer_text) <- NULL
   write(stargazer_text, file = gsub(sprintf("%s/tab%s_SE%s.tex",
                                       saveFolder, nameTag, seType), pattern="//",replace="/") )
 
@@ -122,7 +193,8 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
   if(saveFull == T){
     print2("Saving full table...")
     t_MadeFull <- FullTransformer(t_FULL = t_FULL_input,
-                                  COLNAMES_VEC = model.names)
+                                  COLNAMES_VEC = model.names,
+                                  name_conversion_matrix = NameConversionMat)
     t_MadeFull <- t_MadeFull[!duplicated(row.names(t_MadeFull)),]
     stargazer_text <- capture.output( stargazer::stargazer(t_MadeFull,
                                                            label = TAB_LAB_FULL,
