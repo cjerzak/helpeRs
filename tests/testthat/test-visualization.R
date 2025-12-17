@@ -119,9 +119,9 @@ test_that("heatMap handles add.legend = FALSE", {
   y <- runif(50, 0, 10)
   z <- x - y
 
-  # Note: add.legend = FALSE may have issues with certain input combinations
-  # This test verifies the parameter is accepted
-  skip("add.legend = FALSE has known issues with certain inputs")
+  expect_no_error(
+    heatMap(x, y, z, N = 20, add.legend = FALSE)
+  )
 })
 
 test_that("heatMap handles reference lines", {
@@ -177,9 +177,9 @@ test_that("heatMap handles log transformation for z", {
   y <- runif(50, 0, 10)
   z <- exp(x/5) + exp(y/5)  # All positive values
 
-  # Note: useLog = "z" has known issues in certain configurations
-  # This test verifies the basic functionality
-  skip("useLog = 'z' has known issues in certain configurations")
+  expect_no_error(
+    heatMap(x, y, z, N = 20, useLog = "z")
+  )
 })
 
 # heatmap2 tests

@@ -131,14 +131,20 @@ heatMap <- function(x, y, z,
                yo=seq(min(y),max(y),length=N),duplicate="mean")
   if(is.null(xlim)){xlim = c(summary( s_$x ))[c(1,6)]}
   if(is.null(ylim)){ylim = c(summary( s_$y ))[c(1,6)]}
-  imageFxn <- image.plot
-  if(add.legend == F){imageFxn <- image}
+
   if(!grepl(useLog,pattern="z")){
-    imageFxn(s_, xlab = xlab, ylab = ylab, log = useLog, cex.lab = cex.lab , main = main, cex.main = cex.main,
-             col = myCol,  xlim = xlim, ylim = ylim,
-             legend.width = legend.width,
-             horizontal = horizontal, yaxt = yaxt,
-             zlim = zlim, legend.only = legend.only)
+    if(add.legend == TRUE){
+      # Use image.plot with full parameter set
+      image.plot(s_, xlab = xlab, ylab = ylab, log = useLog, cex.lab = cex.lab, main = main, cex.main = cex.main,
+                 col = myCol, xlim = xlim, ylim = ylim,
+                 legend.width = legend.width,
+                 horizontal = horizontal,
+                 zlim = zlim, legend.only = legend.only)
+    } else {
+      # Use base image with compatible parameters only
+      image(s_, xlab = xlab, ylab = ylab, log = useLog, cex.lab = cex.lab, main = main, cex.main = cex.main,
+            col = myCol, xlim = xlim, ylim = ylim)
+    }
   }
   if(grepl(useLog,pattern="z")){
     useLog <- gsub(useLog,pattern="z",replace ="")
@@ -148,13 +154,20 @@ heatMap <- function(x, y, z,
     zTicks <- exp(seq(log(min(zTicks)),log(max(zTicks)), length.out = 10))
     zTicks <- round(zTicks, abs(min(log(zTicks,base=10))))
     s_$z[s_$z<ep_] <- ep_
-    imageFxn(s_$x,s_$y,log(s_$z),yaxt = yaxt,
-             axis.args = list(at=log(zTicks),labels = zTicks), main = main, cex.main = cex.main,
-             xlab = xlab, ylab = ylab,log = useLog, cex.lab = cex.lab,
-             xlim = xlim,
-             ylim = ylim,,horizontal=horizontal,
-             col = myCol,legend.width=legend.width,
-             zlim = zlim,legend.only = legend.only)
+    if(add.legend == TRUE){
+      # Use image.plot with full parameter set
+      image.plot(s_$x,s_$y,log(s_$z),
+                 axis.args = list(at=log(zTicks),labels = zTicks), main = main, cex.main = cex.main,
+                 xlab = xlab, ylab = ylab,log = useLog, cex.lab = cex.lab,
+                 xlim = xlim, ylim = ylim, horizontal=horizontal,
+                 col = myCol,legend.width=legend.width,
+                 zlim = zlim,legend.only = legend.only)
+    } else {
+      # Use base image with compatible parameters only
+      image(s_$x,s_$y,log(s_$z), main = main, cex.main = cex.main,
+            xlab = xlab, ylab = ylab, log = useLog, cex.lab = cex.lab,
+            xlim = xlim, ylim = ylim, col = myCol)
+    }
   }
   if(!is.null(vline)){ abline(v=vline,lwd=10,col=col_vline) }
   if(!is.null(hline)){ abline(h=hline,lwd=10,col=col_hline) }
