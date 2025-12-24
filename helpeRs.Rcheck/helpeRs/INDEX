@@ -1,0 +1,23 @@
+FullTransformer         Clean and reorder regression tables for
+                        publication
+GetTableEntry           Extract regression results as a formatted table
+                        row
+MakeHeatMap             Visualize two-way predictor effects as a heat
+                        map
+Stargazer2FullTable     Convert a stargazer table to a self-contained
+                        longtable
+Tables2Tex              Generate publication-ready regression tables in
+                        LaTeX
+WidenMargins            Widen margins in a LaTeX table string
+colSummmary             Summarize each column of a data frame
+cols2numeric            Convert data frame columns to numeric when
+                        possible
+f2n                     Convert factors to numeric values
+fixZeroEndings          Ensure numbers have a fixed number of decimal
+                        places
+heatMap                 Create an interpolated heat map from scattered
+                        data
+heatmap2                Quick heat map visualization of a matrix
+image2                  Plot a matrix as an image with intuitive
+                        orientation
+vcovCluster             Cluster-robust covariance matrix estimator

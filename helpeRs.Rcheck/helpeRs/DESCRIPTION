@@ -1,5 +1,6 @@
 Package: helpeRs
-Title: Helper Functions for High-Quality Presentation of Quantitative Research
+Title: Helper Functions for High-Quality Presentation of Quantitative
+        Research
 Version: 0.0
 Authors@R: person(given = "Connor",
                   family = "Jerzak",
@@ -13,20 +14,13 @@ Description: Helper functions for high-quality presentation of quantitative
 Depends: R (>= 3.3.3)
 License: GPL-3
 Encoding: UTF-8
-Imports:
-    fields,
-    ggExtra,
-    ggplot2,
-    interp,
-    lmtest,
-    missForest,
-    plyr,
-    sandwich,
-    stargazer,
-    stringr,
-    viridis
+Imports: fields, ggExtra, ggplot2, interp, lmtest, missForest, plyr,
+        sandwich, stargazer, stringr, viridis
 RoxygenNote: 7.3.3
-Suggests:
-    MASS,
-    testthat (>= 3.0.0)
+Suggests: MASS, testthat (>= 3.0.0)
 Config/testthat/edition: 3
+NeedsCompilation: no
+Packaged: 2025-12-24 14:34:09 UTC; cjerzak
+Author: Connor Jerzak [aut, cre]
+Maintainer: Connor Jerzak <connor.jerzak@austin.utexas.edu>
+Built: R 4.5.2; ; 2025-12-24 14:34:41 UTC; unix

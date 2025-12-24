@@ -1,18 +1,71 @@
 {
-setwd("~/Documents/helpeRs-software")
+  rm(list = ls())
+  options(error = NULL)
 
-package_path <- "~/Documents/helpeRs-software/helpeRs"
+  # Set path and specify package name
+  package_name <- "helpeRs"
+  setwd(sprintf("~/Documents/%s-software", package_name))
 
-devtools::document(package_path)
-try(file.remove(sprintf("./helpeRs.pdf")),T)
-system(paste(shQuote(file.path(R.home("bin"), "R")), "CMD", "Rd2pdf", shQuote(package_path)))
+  # Version number (should match DESCRIPTION)
+  versionNumber <- "0.0"
 
-# Check package to ensure it meets CRAN standards.
-# devtools::check( package_path )
+  # Package path
+  package_path <- sprintf("~/Documents/%s-software/%s", package_name, package_name)
 
-#install.packages(package_path)
+  # Add data list if package has data (skip if no data directory)
+  if (dir.exists(file.path(package_path, "data"))) {
+    tools::add_datalist(package_path, force = TRUE, small.size = 1L)
+  }
 
-#install.packages( "~/Documents/helpeRs-software/helpeRs",repos = NULL, type = "source")
+  # Build vignettes if they exist
+  if (dir.exists(file.path(package_path, "vignettes"))) {
+    devtools::build_vignettes(package_path)
+  }
 
-#install.packages("~/Library/gurobi911/mac64/R/gurobi_9.1-1_R_4.0.2.tgz",repos=NULL)
+  # Generate documentation from roxygen comments
+  devtools::document(package_path)
+
+  # Remove old PDF manual
+  try(file.remove(sprintf("%s/../%s.pdf", package_path, package_name)), silent = TRUE)
+
+  # Create new PDF manual
+  system(sprintf("R CMD Rd2pdf %s", package_path))
+
+  # Run tests (stop on failure)
+  test_results <- devtools::test(package_path)
+  if (any(as.data.frame(test_results)$failed > 0)) {
+    stop("Tests failed! Stopping build process.")
+  }
+  cat("\n\U2713 All tests passed!\n\n")
+
+  # Show object sizes in environment (for debugging memory usage)
+  log(sort(sapply(ls(), function(l_) { object.size(eval(parse(text = l_))) })))
+
+  # Check package to ensure it meets CRAN standards
+  devtools::check(package_path)
+
+  # Build tar.gz
+  system(paste(
+    shQuote(file.path(R.home("bin"), "R")),
+    "CMD build --resave-data",
+    shQuote(package_path)
+  ))
+
+  # Check as CRAN
+  system(paste(
+    shQuote(file.path(R.home("bin"), "R")),
+    "CMD check --as-cran",
+    shQuote(paste0(package_name, "_", versionNumber, ".tar.gz"))
+  ))
+
+  # Manual commands for reference:
+  # R CMD build --resave-data ~/Documents/helpeRs-software/helpeRs
+  # R CMD check --as-cran ~/Documents/helpeRs-software/helpeRs_0.0.tar.gz
+
+  # Install from local
+  install.packages(sprintf("~/Documents/%s-software/%s", package_name, package_name),
+                   repos = NULL, type = "source", force = FALSE)
+
+  # Install from GitHub:
+  # devtools::install_github("cjerzak/helpeRs-software/helpeRs")
 }

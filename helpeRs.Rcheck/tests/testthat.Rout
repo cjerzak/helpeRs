@@ -1,0 +1,93 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> # This file is the main test runner for the helpeRs package
+> # Run all tests with: devtools::test() or testthat::test_dir("tests/testthat")
+> 
+> library(testthat)
+> library(helpeRs)
+> 
+> test_check("helpeRs")
+[1] "[2025-12-24 09:34:53] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:53] Performing name re-writes..."
+[1] "[2025-12-24 09:34:53] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:53] Writing model names..."
+[1] "[2025-12-24 09:34:53] Setting up full table..."
+[1] "[2025-12-24 09:34:53] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Saving full table..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:54] Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]"
+[1] "[2025-12-24 09:34:54] Performing name re-writes..."
+[1] "[2025-12-24 09:34:54] Incorporating other statistics info..."
+[1] "[2025-12-24 09:34:54] Writing model names..."
+[1] "[2025-12-24 09:34:54] Setting up full table..."
+[1] "[2025-12-24 09:34:54] Building table via stargazer..."
+[1] "[2025-12-24 09:34:54] Done with call to Tables2Tex()!"
+[1] "[2025-12-24 09:34:55] MakeHeatMap: wt and hp"
+[1] "[2025-12-24 09:34:55] MakeHeatMap: wt and hp"
+[1] "[2025-12-24 09:34:55] MakeHeatMap: wt and hp"
+[1] "[2025-12-24 09:34:55] MakeHeatMap: wt and hp"
+[1] "[2025-12-24 09:34:55] MakeHeatMap: disp and drat"
+[ FAIL 0 | WARN 12 | SKIP 0 | PASS 137 ]
+
+[ FAIL 0 | WARN 12 | SKIP 0 | PASS 137 ]
+> 
+> proc.time()
+   user  system elapsed 
+  2.084   0.257   2.901 

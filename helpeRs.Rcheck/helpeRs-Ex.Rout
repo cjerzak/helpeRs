@@ -1,0 +1,478 @@
+
+R version 4.5.2 (2025-10-31) -- "[Not] Part in a Rumble"
+Copyright (C) 2025 The R Foundation for Statistical Computing
+Platform: aarch64-apple-darwin20
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "helpeRs"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> base::assign(".ExTimings", "helpeRs-Ex.timings", pos = 'CheckExEnv')
+> base::cat("name\tuser\tsystem\telapsed\n", file=base::get(".ExTimings", pos = 'CheckExEnv'))
+> base::assign(".format_ptime",
++ function(x) {
++   if(!is.na(x[4L])) x[1L] <- x[1L] + x[4L]
++   if(!is.na(x[5L])) x[2L] <- x[2L] + x[5L]
++   options(OutDec = '.')
++   format(x[1L:3L], digits = 7L)
++ },
++ pos = 'CheckExEnv')
+> 
+> ### * </HEADER>
+> library('helpeRs')
+> 
+> base::assign(".oldSearch", base::search(), pos = 'CheckExEnv')
+> base::assign(".old_wd", base::getwd(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("FullTransformer")
+> ### * FullTransformer
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: FullTransformer
+> ### Title: Clean and reorder regression tables for publication
+> ### Aliases: FullTransformer
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Create a simple table
+> ##D t_raw <- data.frame(Model1 = c("0.5 (2.1)*", "0.95", "100"))
+> ##D row.names(t_raw) <- c("gdpPerCapita", "Adjusted R-squared", "Observations")
+> ##D 
+> ##D # Clean and rename
+> ##D name_mat <- matrix(c("gdpPerCapita", "GDP per Capita"), ncol = 2)
+> ##D t_clean <- FullTransformer(t_raw, COLNAMES_VEC = "Model 1",
+> ##D                            name_conversion_matrix = name_mat)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("FullTransformer", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("GetTableEntry")
+> ### * GetTableEntry
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: GetTableEntry
+> ### Title: Extract regression results as a formatted table row
+> ### Aliases: GetTableEntry
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Fit a simple linear model
+> ##D data(mtcars)
+> ##D fit <- lm(mpg ~ wt + hp, data = mtcars)
+> ##D 
+> ##D # Extract with robust standard errors
+> ##D entry <- GetTableEntry(fit, clust_id = NULL, NAME = "Model 1")
+> ##D 
+> ##D # Extract with clustered standard errors
+> ##D entry_clust <- GetTableEntry(fit, clust_id = "cyl", NAME = "Model 2")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("GetTableEntry", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("MakeHeatMap")
+> ### * MakeHeatMap
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: MakeHeatMap
+> ### Title: Visualize two-way predictor effects as a heat map
+> ### Aliases: MakeHeatMap
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Fit a model
+> ##D fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+> ##D 
+> ##D # Create heat map of mpg as function of wt and hp
+> ##D MakeHeatMap(
+> ##D   factor1 = "wt",
+> ##D   factor2 = "hp",
+> ##D   outcome = "mpg",
+> ##D   dat = mtcars,
+> ##D   lm_obj = fit,
+> ##D   pdf_path = "mpg_heatmap.pdf"
+> ##D )
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("MakeHeatMap", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("Stargazer2FullTable")
+> ### * Stargazer2FullTable
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: Stargazer2FullTable
+> ### Title: Convert a stargazer table to a self-contained longtable
+> ### Aliases: Stargazer2FullTable
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Capture stargazer output and convert to longtable
+> ##D library(stargazer)
+> ##D fit <- lm(mpg ~ wt + hp, data = mtcars)
+> ##D sg_output <- capture.output(stargazer(fit))
+> ##D 
+> ##D # Convert to longtable format
+> ##D lt_output <- Stargazer2FullTable(sg_output, fontsize = "scriptsize")
+> ##D 
+> ##D # Write to file
+> ##D write(lt_output, file = "full_table.tex")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("Stargazer2FullTable", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("Tables2Tex")
+> ### * Tables2Tex
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: Tables2Tex
+> ### Title: Generate publication-ready regression tables in LaTeX
+> ### Aliases: Tables2Tex
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Fit multiple models
+> ##D fit1 <- lm(mpg ~ wt, data = mtcars)
+> ##D fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+> ##D fit3 <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+> ##D 
+> ##D # Generate tables
+> ##D Tables2Tex(
+> ##D   reg_list = list(fit1, fit2, fit3),
+> ##D   clust_id = NULL,
+> ##D   saveFolder = "./tables/",
+> ##D   nameTag = "MPG_Models",
+> ##D   tabCaption = "Determinants of Fuel Efficiency",
+> ##D   model.names = c("Base", "Controls", "Full")
+> ##D )
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("Tables2Tex", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("WidenMargins")
+> ### * WidenMargins
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: WidenMargins
+> ### Title: Widen margins in a LaTeX table string
+> ### Aliases: WidenMargins
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Read an existing table and widen its margins
+> ##D tex_lines <- readLines("my_table.tex")
+> ##D tex_wide <- WidenMargins(tex_lines)
+> ##D writeLines(tex_wide, "my_table_wide.tex")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("WidenMargins", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("colSummmary")
+> ### * colSummmary
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: colSummmary
+> ### Title: Summarize each column of a data frame
+> ### Aliases: colSummmary
+> 
+> ### ** Examples
+> 
+> # Summarize mtcars
+> colSummmary(mtcars[, 1:4])
+      mpg       cyl      disp        hp 
+ 20.09062   6.18750 230.72188 146.68750 
+> 
+> # Mixed numeric and character columns
+> df <- data.frame(
++   x = c(1, 2, 3, 4),
++   y = c("a", "b", "a", "a")
++ )
+> colSummmary(df)  # Returns mean of x and mode of y
+Warning in f2n(x_) : NAs introduced by coercion
+    x     y 
+"2.5"   "a" 
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("colSummmary", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("cols2numeric")
+> ### * cols2numeric
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: cols2numeric
+> ### Title: Convert data frame columns to numeric when possible
+> ### Aliases: cols2numeric
+> 
+> ### ** Examples
+> 
+> # Data frame with mixed types
+> df <- data.frame(
++   a = factor(c("1.5", "2.5", "3.5")),
++   b = c("x", "y", "z"),
++   c = c(1, 2, 3),
++   stringsAsFactors = FALSE
++ )
+> 
+> # Convert what can be converted
+> df_numeric <- cols2numeric(df)
+Warning in f2n(x_) : NAs introduced by coercion
+> sapply(df_numeric, class)
+        1.5         2.5         3.5           x           y           z 
+"character" "character" "character" "character" "character" "character" 
+          1           2           3 
+"character" "character" "character" 
+> # a becomes numeric, b stays character, c stays numeric
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("cols2numeric", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("f2n")
+> ### * f2n
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: f2n
+> ### Title: Convert factors to numeric values
+> ### Aliases: f2n
+> 
+> ### ** Examples
+> 
+> # Factor with numeric levels
+> x <- factor(c("1.5", "2.3", "3.1"))
+> 
+> # Wrong way - returns level indices (1, 2, 3)
+> as.numeric(x)
+[1] 1 2 3
+> 
+> # Correct way - returns actual values
+> f2n(x)  # Returns c(1.5, 2.3, 3.1)
+[1] 1.5 2.3 3.1
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("f2n", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("fixZeroEndings")
+> ### * fixZeroEndings
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: fixZeroEndings
+> ### Title: Ensure numbers have a fixed number of decimal places
+> ### Aliases: fixZeroEndings
+> 
+> ### ** Examples
+> 
+> # Pad to 2 decimal places (default)
+> fixZeroEndings(c("1.5", "2", "3.14"))
+[1] "1.50" "2.00" "3.14"
+> # Returns: c("1.50", "2.00", "3.14")
+> 
+> # Pad to 3 decimal places
+> fixZeroEndings(c(1.5, 2.33, 3), roundAt = 3)
+[1] "1.500" "2.330" "3.000"
+> # Returns: c("1.500", "2.330", "3.000")
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("fixZeroEndings", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("heatMap")
+> ### * heatMap
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: heatMap
+> ### Title: Create an interpolated heat map from scattered data
+> ### Aliases: heatMap
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D # Create some scattered data
+> ##D set.seed(42)
+> ##D x <- runif(100, 0, 10)
+> ##D y <- runif(100, 0, 10)
+> ##D z <- sin(x) * cos(y) + rnorm(100, sd = 0.1)
+> ##D 
+> ##D # Plot as interpolated heat map
+> ##D heatMap(x, y, z, N = 50, main = "Example Heat Map",
+> ##D         xlab = "X Variable", ylab = "Y Variable")
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("heatMap", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("heatmap2")
+> ### * heatmap2
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: heatmap2
+> ### Title: Quick heat map visualization of a matrix
+> ### Aliases: heatmap2
+> 
+> ### ** Examples
+> 
+> # Create a correlation matrix
+> cor_mat <- cor(mtcars[, 1:5])
+> 
+> # Quick base R plot
+> heatmap2(cor_mat, row_labels = colnames(cor_mat),
++          col_labels = colnames(cor_mat))
+> 
+> ## Not run: 
+> ##D # ggplot2 version
+> ##D heatmap2(cor_mat, use_gg = TRUE)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("heatmap2", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("image2")
+> ### * image2
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: image2
+> ### Title: Plot a matrix as an image with intuitive orientation
+> ### Aliases: image2
+> 
+> ### ** Examples
+> 
+> # Create a simple matrix
+> mat <- matrix(1:12, nrow = 3, ncol = 4)
+> rownames(mat) <- c("A", "B", "C")
+> colnames(mat) <- c("W", "X", "Y", "Z")
+> 
+> # Plot with row/column labels
+> image2(mat, xaxt = colnames(mat), yaxt = rownames(mat), main = "Example")
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("image2", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> cleanEx()
+> nameEx("vcovCluster")
+> ### * vcovCluster
+> 
+> flush(stderr()); flush(stdout())
+> 
+> base::assign(".ptime", proc.time(), pos = "CheckExEnv")
+> ### Name: vcovCluster
+> ### Title: Cluster-robust covariance matrix estimator
+> ### Aliases: vcovCluster
+> 
+> ### ** Examples
+> 
+> ## Not run: 
+> ##D data(mtcars)
+> ##D fit <- lm(mpg ~ wt + hp, data = mtcars)
+> ##D 
+> ##D # Cluster by number of cylinders
+> ##D V_clust <- vcovCluster(fit, "cyl")
+> ##D 
+> ##D # Use with coeftest for clustered standard errors
+> ##D library(lmtest)
+> ##D coeftest(fit, vcov. = V_clust)
+> ## End(Not run)
+> 
+> 
+> 
+> 
+> base::assign(".dptime", (proc.time() - get(".ptime", pos = "CheckExEnv")), pos = "CheckExEnv")
+> base::cat("vcovCluster", base::get(".format_ptime", pos = 'CheckExEnv')(get(".dptime", pos = "CheckExEnv")), "\n", file=base::get(".ExTimings", pos = 'CheckExEnv'), append=TRUE, sep="\t")
+> ### * <FOOTER>
+> ###
+> cleanEx()
+> options(digits = 7L)
+> base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  0.532 0.028 0.705 0 0 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

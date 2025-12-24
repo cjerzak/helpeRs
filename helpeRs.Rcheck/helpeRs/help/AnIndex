@@ -1,0 +1,14 @@
+cols2numeric	cols2numeric
+colSummmary	colSummmary
+f2n	f2n
+fixZeroEndings	fixZeroEndings
+FullTransformer	FullTransformer
+GetTableEntry	GetTableEntry
+heatMap	heatMap
+heatmap2	heatmap2
+image2	image2
+MakeHeatMap	MakeHeatMap
+Stargazer2FullTable	Stargazer2FullTable
+Tables2Tex	Tables2Tex
+vcovCluster	vcovCluster
+WidenMargins	WidenMargins
