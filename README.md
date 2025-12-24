@@ -147,7 +147,7 @@ If you use **helpeRs** in your research, please cite:
   author = {Jerzak, Connor},
   title = {helpeRs: Helper Functions for High-Quality Presentation of Quantitative Research},
   url = {https://github.com/cjerzak/helpeRs-software},
-  year = {2024}
+  year = {2026}
 }
 ```
 
@@ -157,4 +157,4 @@ GPL-3
 
 ## Author
 
-[**Connor Jerzak**](https://connorjerzak.com/) | University of Texas at Austin | connor.jerzak@austin.utexas.edu
+[**Connor Jerzak**](https://connorjerzak.com/), University of Texas at Austin
