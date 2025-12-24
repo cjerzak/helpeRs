@@ -157,6 +157,4 @@ GPL-3
 
 ## Author
 
-**Connor Jerzak**
-University of Texas at Austin
-connor.jerzak@austin.utexas.edu
+[**Connor Jerzak**](https://connorjerzak.com/) | University of Texas at Austin | connor.jerzak@austin.utexas.edu
