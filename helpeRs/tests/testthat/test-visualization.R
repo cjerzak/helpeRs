@@ -198,10 +198,17 @@ test_that("heatmap2 handles row and column labels", {
   skip_if_not_installed("fields")
 
   cor_mat <- cor(mtcars[, 1:5])
+  row_labs <- rownames(cor_mat)
+  col_labs <- colnames(cor_mat)
 
-  # Note: row/col labels have some graphical parameter issues
-  # Skip this test for now
-  skip("heatmap2 row/col labels have known graphical parameter issues")
+  # Test with both row and column labels
+  expect_no_error(heatmap2(cor_mat, row_labels = row_labs, col_labels = col_labs))
+
+  # Test with only row labels
+  expect_no_error(heatmap2(cor_mat, row_labels = row_labs))
+
+  # Test with only column labels
+  expect_no_error(heatmap2(cor_mat, col_labels = col_labs))
 })
 
 test_that("heatmap2 handles scaling", {

@@ -266,11 +266,14 @@ heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
           y = rep(seq_len(nrow(mat)), times = ncol(mat)),
           z = as.vector(mat),
           N = max(ncol(mat), nrow(mat)),
-          yaxt = row_labels,
           includeMarginals = includeMarginals,
           ...)
+  # Add custom axis labels using actual data coordinates
   if(!is.null(col_labels)){
-    axis(1, at = seq(0, 1, length.out = ncol(mat)), labels = col_labels, las = 1)
+    axis(1, at = seq_len(ncol(mat)), labels = col_labels, las = 2)
+  }
+  if(!is.null(row_labels)){
+    axis(2, at = seq_len(nrow(mat)), labels = row_labels, las = 1)
   }
   invisible(NULL)
 }
