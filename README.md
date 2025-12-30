@@ -79,7 +79,10 @@ heatMap(x = mtcars$wt, y = mtcars$hp, z = mtcars$mpg,
 |----------|-------------|
 | `Tables2Tex()` | Main function: multiple models → LaTeX tables |
 | `GetTableEntry()` | Extract formatted results from a single model |
+| `FullTransformer()` | Clean and reformat table entries for publication |
+| `Stargazer2FullTable()` | Convert stargazer output to longtable format |
 | `vcovCluster()` | Clustered standard errors (Arellano method) |
+| `WidenMargins()` | Extend LaTeX table margins beyond page boundaries |
 
 **Standard Error Options:**
 - `seType = "analytical"` — Sandwich estimators (clustered or HC-robust)
