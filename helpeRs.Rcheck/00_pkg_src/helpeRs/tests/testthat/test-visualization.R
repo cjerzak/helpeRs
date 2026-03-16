@@ -259,7 +259,9 @@ test_that("heatmap2 works with ggplot2 output", {
   rownames(mat) <- c("R1", "R2", "R3")
   colnames(mat) <- c("C1", "C2", "C3", "C4")
 
-  result <- heatmap2(mat, use_gg = TRUE)
+  expect_no_warning(
+    result <- heatmap2(mat, use_gg = TRUE)
+  )
 
   expect_s3_class(result, "gg")
 })
@@ -271,9 +273,11 @@ test_that("heatmap2 ggplot handles row/col labels", {
   rownames(mat) <- c("R1", "R2", "R3")
   colnames(mat) <- c("C1", "C2", "C3", "C4")
 
-  result <- heatmap2(mat, use_gg = TRUE,
-                     row_labels = c("Row1", "Row2", "Row3"),
-                     col_labels = c("Col1", "Col2", "Col3", "Col4"))
+  expect_no_warning(
+    result <- heatmap2(mat, use_gg = TRUE,
+                       row_labels = c("Row1", "Row2", "Row3"),
+                       col_labels = c("Col1", "Col2", "Col3", "Col4"))
+  )
 
   expect_s3_class(result, "gg")
 })
@@ -392,7 +396,7 @@ test_that("MakeHeatMap works with different predictor pairs", {
 
   temp_pdf <- tempfile(fileext = ".pdf")
 
-  expect_no_error(
+  expect_no_warning(
     MakeHeatMap(
       factor1 = "disp",
       factor2 = "drat",

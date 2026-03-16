@@ -5,11 +5,11 @@ MakeHeatMap	0	0	0
 Stargazer2FullTable	0	0	0	
 Tables2Tex	0	0	0	
 WidenMargins	0	0	0	
-colSummmary	0.002	0.001	0.002	
+colSummmary	0.002	0.000	0.002	
 cols2numeric	0.000	0.000	0.001	
 f2n	0	0	0	
 fixZeroEndings	0.001	0.000	0.000	
 heatMap	0	0	0	
-heatmap2	0.242	0.016	0.258	
-image2	0.001	0.001	0.002	
+heatmap2	0.225	0.012	0.236	
+image2	0.001	0.001	0.001	
 vcovCluster	0	0	0	

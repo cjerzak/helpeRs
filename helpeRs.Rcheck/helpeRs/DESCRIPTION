@@ -20,7 +20,7 @@ RoxygenNote: 7.3.3
 Suggests: MASS, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2026-03-16 18:07:47 UTC; cjerzak
+Packaged: 2026-03-16 18:15:38 UTC; cjerzak
 Author: Connor Jerzak [aut, cre]
 Maintainer: Connor Jerzak <connor.jerzak@austin.utexas.edu>
-Built: R 4.5.2; ; 2026-03-16 18:07:55 UTC; unix
+Built: R 4.5.2; ; 2026-03-16 18:15:46 UTC; unix
