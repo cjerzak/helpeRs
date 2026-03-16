@@ -229,3 +229,19 @@ test_that("vcovCluster works with different cluster variables", {
   # Different cluster structures should give different results
   expect_false(isTRUE(all.equal(V_cyl, V_gear)))
 })
+
+test_that("vcovCluster supports polr models", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("MASS")
+
+  dat <- transform(
+    MASS::housing,
+    Sat = ordered(Sat, levels = c("Low", "Medium", "High"))
+  )
+  fit <- MASS::polr(Sat ~ Infl + Type + Cont, weights = Freq, data = dat, Hess = TRUE)
+  V_polr <- vcovCluster(fit, "Type")
+
+  expect_true(is.matrix(V_polr))
+  expect_equal(dim(V_polr), dim(stats::vcov(fit)))
+  expect_equal(V_polr, t(V_polr))
+})

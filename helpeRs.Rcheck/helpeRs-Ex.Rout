@@ -466,7 +466,7 @@ Warning in f2n(x_) : NAs introduced by coercion
 > cleanEx()
 > options(digits = 7L)
 > base::cat("Time elapsed: ", proc.time() - base::get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  0.472 0.02 0.492 0 0 
+Time elapsed:  0.482 0.027 0.514 0 0 
 > grDevices::dev.off()
 null device 
           1 

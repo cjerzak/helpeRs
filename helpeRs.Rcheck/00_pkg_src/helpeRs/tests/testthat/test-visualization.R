@@ -182,6 +182,24 @@ test_that("heatMap handles log transformation for z", {
   )
 })
 
+test_that("heatMap records a plot for the log-z base-image path", {
+  x <- rep(1:4, each = 4)
+  y <- rep(1:4, times = 4)
+  z <- exp(x + y)
+  temp_pdf <- tempfile(fileext = ".pdf")
+
+  grDevices::pdf(temp_pdf)
+  on.exit({
+    grDevices::dev.off()
+    unlink(temp_pdf)
+  }, add = TRUE)
+
+  expect_no_error(
+    heatMap(x, y, z, N = 4, useLog = "z", add.legend = FALSE)
+  )
+  expect_true(inherits(recordPlot(), "recordedplot"))
+})
+
 # heatmap2 tests
 
 test_that("heatmap2 runs without error for basic matrix", {
@@ -264,6 +282,7 @@ test_that("heatmap2 works with ggplot2 output", {
   )
 
   expect_s3_class(result, "gg")
+  expect_equal(nrow(ggplot2::ggplot_build(result)$data[[1]]), length(mat))
 })
 
 test_that("heatmap2 ggplot handles row/col labels", {
@@ -280,6 +299,48 @@ test_that("heatmap2 ggplot handles row/col labels", {
   )
 
   expect_s3_class(result, "gg")
+  expect_equal(levels(result$data$Var1), c("Row3", "Row2", "Row1"))
+  expect_equal(levels(result$data$Var2), c("Col1", "Col2", "Col3", "Col4"))
+})
+
+test_that("heatmap2 ggplot applies scaling before plotting", {
+  skip_if_not_installed("ggplot2")
+
+  mat <- matrix(c(100, 200, 300, 400), nrow = 2, byrow = TRUE)
+  rownames(mat) <- c("R1", "R2")
+  colnames(mat) <- c("C1", "C2")
+
+  result <- heatmap2(
+    mat,
+    use_gg = TRUE,
+    scale = TRUE,
+    row_labels = c("Row1", "Row2"),
+    col_labels = c("Col1", "Col2")
+  )
+
+  expect_equal(unname(result$data$Freq), as.vector(scale(mat)))
+  expect_equal(levels(result$data$Var1), c("Row2", "Row1"))
+  expect_equal(levels(result$data$Var2), c("Col1", "Col2"))
+})
+
+test_that("heatmap2 ggplot applies log transformation before plotting", {
+  skip_if_not_installed("ggplot2")
+
+  mat <- matrix(c(1, 10, 100, 1000), nrow = 2, byrow = TRUE)
+  rownames(mat) <- c("R1", "R2")
+  colnames(mat) <- c("C1", "C2")
+
+  result <- heatmap2(
+    mat,
+    use_gg = TRUE,
+    log = TRUE,
+    row_labels = c("Row1", "Row2"),
+    col_labels = c("Col1", "Col2")
+  )
+
+  expect_equal(unname(result$data$Freq), as.vector(log(mat)))
+  expect_equal(levels(result$data$Var1), c("Row2", "Row1"))
+  expect_equal(levels(result$data$Var2), c("Col1", "Col2"))
 })
 
 # MakeHeatMap tests
