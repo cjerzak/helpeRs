@@ -62,7 +62,9 @@ FullTransformer <- function(t_FULL,
                      "Adjusted R-squared",
                      "AIC", "A.I.C.",
                      "Weak instruments","Wu-Hausman"))
-  t_FULL <- rbind(t_FULL[-last_,],t_FULL[last_,])
+  if(length(last_) > 0){
+    t_FULL <- rbind(t_FULL[-last_, , drop = FALSE], t_FULL[last_, , drop = FALSE])
+  }
   add_factor <- upperFirst( gsub(gsub(stringr::str_extract(
                                               row.names(t_FULL),
                                                pattern="as.factor\\(.*\\)"),
@@ -85,9 +87,10 @@ FullTransformer <- function(t_FULL,
     text_ <- gsub(text_,pattern="-$",replacement="")# replace hanging -'s at end of string
     text_ <- gsub(text_,pattern="- $",replacement="")# replace hanging -'s at end of string
     text_ <- gsub(text_,pattern="\\.\\.",replacement="")
+    text_ <- gsub(text_, pattern="\\s+", replacement=" ")
+    text_ <- trimws(text_)
     return(  text_  )  }
   row.names( t_FULL ) <- FullNameConverter(row.names(t_FULL))
   colnames( t_FULL ) <- COLNAMES_VEC
   return( t_FULL  )
 }
-

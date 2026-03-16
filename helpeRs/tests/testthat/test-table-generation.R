@@ -13,6 +13,14 @@ write_bootstrap_files <- function(data, directory, prefix, reps = 8) {
   }
 }
 
+read_tex_body <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  if (length(lines) <= 2) {
+    return(lines)
+  }
+  lines[-c(1, 2)]
+}
+
 # GetTableEntry tests
 
 test_that("GetTableEntry returns a data frame", {
@@ -80,9 +88,7 @@ test_that("GetTableEntry works with clustered standard errors", {
   # Both should work and return data frames
   expect_s3_class(result_clust, "data.frame")
   expect_s3_class(result_robust, "data.frame")
-
-  # Results should differ due to different SE calculation
-  # Note: the values are stored as character strings with formatting
+  expect_false(identical(result_clust$wt, result_robust$wt))
 })
 
 test_that("GetTableEntry respects iv_round parameter", {
@@ -111,9 +117,8 @@ test_that("GetTableEntry handles inParens = 'se'", {
   result_tstat <- GetTableEntry(fit, clust_id = NULL, inParens = "tstat")
   result_se <- GetTableEntry(fit, clust_id = NULL, inParens = "se")
 
-  # Both should work, values in parentheses will differ
-  expect_s3_class(result_tstat, "data.frame")
-  expect_s3_class(result_se, "data.frame")
+  expect_equal(result_tstat$wt, "-5.34 (-8.17)*")
+  expect_equal(result_se$wt, "-5.34 (0.65)*")
 })
 
 test_that("GetTableEntry handles single covariate model", {
@@ -153,6 +158,46 @@ test_that("GetTableEntry counts observations correctly", {
   result <- GetTableEntry(fit, clust_id = NULL)
 
   # mtcars has 32 observations
+  expect_equal(result$Observations, "32")
+})
+
+test_that("GetTableEntry includes IV diagnostics for ivreg models", {
+  skip_if_not_installed("AER")
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("lmtest")
+
+  data("CigarettesSW", package = "AER")
+  c1995 <- subset(CigarettesSW, year == 1995)
+  c1995$rprice <- c1995$price / c1995$cpi
+  c1995$rincome <- c1995$income / c1995$population / c1995$cpi
+  c1995$tax <- c1995$tax / c1995$cpi
+
+  fit <- AER::ivreg(
+    log(packs) ~ log(rprice) + log(rincome) | log(rincome) + tax,
+    data = c1995
+  )
+  result <- GetTableEntry(fit, clust_id = NULL, iv = TRUE, NAME = "IV")
+
+  expect_true("Weak instruments" %in% colnames(result))
+  expect_true("Wu-Hausman" %in% colnames(result))
+  expect_match(result[["Weak instruments"]], "^[0-9]+(\\.[0-9]+)?\\*?$")
+  expect_match(result[["Wu-Hausman"]], "^[0-9]+(\\.[0-9]+)?\\*?$")
+})
+
+test_that("GetTableEntry handles clustered single-coefficient models", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("lmtest")
+
+  fit <- lm(mpg ~ 1, data = mtcars)
+  result <- GetTableEntry(
+    fit,
+    clust_id = "cyl",
+    keepCoef1 = TRUE,
+    NAME = "Intercept Only"
+  )
+
+  expect_true("(Intercept)" %in% colnames(result))
+  expect_equal(result[["Adjusted R-squared"]], "0.00")
   expect_equal(result$Observations, "32")
 })
 
@@ -282,21 +327,16 @@ test_that("GetTableEntry supports file-based bootstrap replications", {
 
 # FullTransformer tests
 
-test_that("FullTransformer completes without error", {
-  # Create input as a matrix with proper structure (columns = models, rows = variables)
+test_that("FullTransformer preserves single non-stat rows and applies column names", {
   t_raw <- matrix(
     c("0.5 (2.1)*", "0.95", "100",
       "0.6 (1.8)*", "0.96", "100"),
     ncol = 2, byrow = FALSE
   )
-  row.names(t_raw) <- c("gdpPerCapita", "Adjusted R-squared", "Observations")
-  colnames(t_raw) <- c("Model1", "Model2")
+  row.names(t_raw) <- c("wt", "Adjusted R-squared", "Observations")
+  result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
 
-  expect_no_error(
-    result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
-  )
-
-  # Check column names are applied
+  expect_equal(row.names(result), c("wt", "Adjusted R-squared", "Observations"))
   expect_equal(colnames(result), c("Model 1", "Model 2"))
 })
 
@@ -307,15 +347,15 @@ test_that("FullTransformer applies name_conversion_matrix", {
     ncol = 2, byrow = FALSE
   )
   row.names(t_raw) <- c("gdpPerCapita", "Adjusted R-squared", "Observations")
-  colnames(t_raw) <- c("Model1", "Model2")
-
   name_mat <- matrix(c("gdpPerCapita", "GDP per Capita"), ncol = 2)
 
-  # Just verify the function completes without error with name_conversion_matrix
-  expect_no_error(
-    result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"),
-                              name_conversion_matrix = name_mat)
+  result <- FullTransformer(
+    t_raw,
+    COLNAMES_VEC = c("Model 1", "Model 2"),
+    name_conversion_matrix = name_mat
   )
+
+  expect_equal(row.names(result), c("GDP per Capita", "Adjusted R-squared", "Observations"))
 })
 
 test_that("FullTransformer moves statistics to bottom", {
@@ -329,28 +369,26 @@ test_that("FullTransformer moves statistics to bottom", {
 
   result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
 
-  # Get row names
-  rn <- row.names(result)
-  # Observations and R-squared should be after wt and hp
-  obs_pos <- which(rn == "Observations")
-  wt_pos <- which(grepl("wt", rn, ignore.case = TRUE))
-
-  # Just verify the function completes without error and has expected rows
-  expect_true(length(rn) >= 4)
+  expect_equal(
+    row.names(result),
+    c("wt", "hp", "Observations", "Adjusted R-squared")
+  )
 })
 
 test_that("FullTransformer handles camelCase splitting", {
   t_raw <- matrix(
-    c("0.5*", "0.95", "100",
-      "0.6*", "0.96", "100"),
+    c("0.5*", "0.7*", "0.95", "100",
+      "0.6*", "0.8*", "0.96", "100"),
     ncol = 2, byrow = FALSE
   )
-  row.names(t_raw) <- c("someVariableName", "Adjusted R-squared", "Observations")
+  row.names(t_raw) <- c("someVariableName", "anotherVariableName", "Adjusted R-squared", "Observations")
   colnames(t_raw) <- c("Model1", "Model2")
 
-  # Just verify the function completes without error
-  expect_no_error(
-    result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
+  result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
+
+  expect_equal(
+    row.names(result)[1:2],
+    c("some Variable Name", "another Variable Name")
   )
 })
 
@@ -363,23 +401,9 @@ test_that("FullTransformer preserves GDP acronym", {
   row.names(t_raw) <- c("GDPPerCapita", "Adjusted R-squared", "Observations")
   colnames(t_raw) <- c("Model1", "Model2")
 
-  # Just verify the function completes without error
-  expect_no_error(
-    result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
-  )
-})
+  result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
 
-test_that("FullTransformer applies column names", {
-  t_raw <- matrix(
-    c("0.5*", "0.6*"),
-    ncol = 2, byrow = FALSE
-  )
-  row.names(t_raw) <- c("wt")
-  colnames(t_raw) <- c("Model1", "Model2")
-
-  result <- FullTransformer(t_raw, COLNAMES_VEC = c("Custom Name 1", "Custom Name 2"))
-
-  expect_equal(colnames(result), c("Custom Name 1", "Custom Name 2"))
+  expect_equal(row.names(result)[1], "GDP Per Capita")
 })
 
 test_that("FullTransformer handles as.factor() variable names", {
@@ -393,8 +417,7 @@ test_that("FullTransformer handles as.factor() variable names", {
 
   result <- FullTransformer(t_raw, COLNAMES_VEC = c("Model 1", "Model 2"))
 
-  # as.factor() pattern should be processed (removed or transformed)
-  expect_no_error(result)
+  expect_equal(row.names(result)[1], "Cyl - 6")
 })
 
 # Stargazer2FullTable tests
@@ -482,6 +505,28 @@ test_that("Stargazer2FullTable removes tabular end tag", {
   expect_false(any(grepl("\\\\end\\{tabular\\}", result)))
 })
 
+test_that("Stargazer2FullTable adds continued headers for long tables", {
+  stargazer_text <- c(
+    "\\begin{table}[!htbp]",
+    "\\centering",
+    "\\begin{tabular}{@{\\extracolsep{5pt}} lcc}",
+    "\\hline",
+    "Variable & Model 1 & Model 2 \\\\",
+    "\\hline",
+    rep("row & 1 & 2 \\\\", 45),
+    "\\hline",
+    "\\end{tabular}",
+    "\\end{table}"
+  )
+
+  result <- Stargazer2FullTable(stargazer_text)
+
+  expect_true(any(grepl("\\\\endfirsthead", result)))
+  expect_true(any(grepl("\\\\endhead", result)))
+  expect_true(any(grepl("Continued from previous page", result, fixed = TRUE)))
+  expect_true(any(grepl("\\\\multicolumn\\{3\\}\\{c\\}", result)))
+})
+
 # Tables2Tex integration tests
 
 test_that("Tables2Tex creates output files", {
@@ -513,6 +558,7 @@ test_that("Tables2Tex creates output files", {
 
   expect_true(file.exists(main_file))
   expect_true(file.exists(full_file))
+  expect_true(any(grepl("longtable", readLines(full_file, warn = FALSE), fixed = TRUE)))
 
   # Clean up
   unlink(main_file)
@@ -547,8 +593,9 @@ test_that("Tables2Tex handles custom model names", {
   expect_true(file.exists(main_file))
 
   # Read content and check model names are included
-  content <- readLines(main_file)
-  expect_true(any(grepl("Base Model", content)) || any(grepl("Full Model", content)))
+  content <- paste(readLines(main_file, warn = FALSE), collapse = "\n")
+  expect_match(content, "Base Model", fixed = TRUE)
+  expect_match(content, "Full Model", fixed = TRUE)
 
   # Clean up
   unlink(main_file)
@@ -583,6 +630,13 @@ test_that("Tables2Tex handles NameConversionMat", {
       saveFull = FALSE
     )
   )
+
+  content <- paste(
+    readLines(file.path(temp_dir, "tabNameConvert_SEanalytical.tex"), warn = FALSE),
+    collapse = "\n"
+  )
+  expect_match(content, "Weight (1000 lbs)", fixed = TRUE)
+  expect_match(content, "Horsepower", fixed = TRUE)
 
   # Clean up
   unlink(file.path(temp_dir, "tabNameConvert_SEanalytical.tex"))
@@ -649,8 +703,91 @@ test_that("Tables2Tex handles checkmark_list", {
     )
   )
 
+  content <- paste(
+    readLines(file.path(temp_dir, "tabCheckmarks_SEanalytical.tex"), warn = FALSE),
+    collapse = "\n"
+  )
+  expect_match(content, "Year.FE", fixed = TRUE)
+  expect_match(content, "State.FE", fixed = TRUE)
+  expect_match(content, "\\checkmark", fixed = TRUE)
+
   # Clean up
   unlink(file.path(temp_dir, "tabCheckmarks_SEanalytical.tex"))
+})
+
+test_that("Tables2Tex handles addrow_list", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("lmtest")
+  skip_if_not_installed("stargazer")
+  skip_if_not_installed("plyr")
+
+  fit1 <- lm(mpg ~ wt, data = mtcars)
+  fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+  temp_dir <- tempdir()
+
+  expect_no_error(
+    Tables2Tex(
+      reg_list = list(fit1, fit2),
+      clust_id = NULL,
+      saveFolder = temp_dir,
+      nameTag = "AddRows",
+      addrow_list = list("Sample" = c("All", "Restricted")),
+      saveFull = FALSE
+    )
+  )
+
+  content <- paste(
+    readLines(file.path(temp_dir, "tabAddRows_SEanalytical.tex"), warn = FALSE),
+    collapse = "\n"
+  )
+  expect_match(content, "Sample", fixed = TRUE)
+  expect_match(content, "All", fixed = TRUE)
+  expect_match(content, "Restricted", fixed = TRUE)
+
+  unlink(file.path(temp_dir, "tabAddRows_SEanalytical.tex"))
+})
+
+test_that("Tables2Tex supports character reg_list inputs", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("lmtest")
+  skip_if_not_installed("stargazer")
+  skip_if_not_installed("plyr")
+
+  fit1 <- lm(mpg ~ wt, data = mtcars)
+  fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+  object_dir <- tempfile("tables2tex-objects-")
+  char_dir <- tempfile("tables2tex-characters-")
+  dir.create(object_dir)
+  dir.create(char_dir)
+  assign("fit1", fit1, envir = .GlobalEnv)
+  assign("fit2", fit2, envir = .GlobalEnv)
+  on.exit({
+    rm("fit1", envir = .GlobalEnv)
+    rm("fit2", envir = .GlobalEnv)
+  }, add = TRUE)
+
+  Tables2Tex(
+    reg_list = list(fit1, fit2),
+    clust_id = NULL,
+    saveFolder = object_dir,
+    nameTag = "Same",
+    saveFull = FALSE
+  )
+  Tables2Tex(
+    reg_list = c("fit1", "fit2"),
+    clust_id = NULL,
+    saveFolder = char_dir,
+    nameTag = "Same",
+    saveFull = FALSE
+  )
+
+  expect_identical(
+    read_tex_body(file.path(object_dir, "tabSame_SEanalytical.tex")),
+    read_tex_body(file.path(char_dir, "tabSame_SEanalytical.tex"))
+  )
+
+  unlink(file.path(object_dir, "tabSame_SEanalytical.tex"))
+  unlink(file.path(char_dir, "tabSame_SEanalytical.tex"))
 })
 
 test_that("Tables2Tex handles single model", {
@@ -723,6 +860,12 @@ test_that("Tables2Tex handles font.size parameter", {
       font.size = "scriptsize",
       saveFull = FALSE
     )
+  )
+
+  expect_match(
+    paste(readLines(file.path(temp_dir, "tabFontSize_SEanalytical.tex"), warn = FALSE), collapse = "\n"),
+    "\\scriptsize",
+    fixed = TRUE
   )
 
   # Clean up
