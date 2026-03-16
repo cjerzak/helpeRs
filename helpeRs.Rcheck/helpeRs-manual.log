@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.4.5)  24 DEC 2025 09:35
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.4.5)  16 MAR 2026 14:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -347,8 +347,8 @@ File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count294
 \l__pdf_internal_box=\box58
 )
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.aux)
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.aux)
 \openout1 = `Rd2.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
@@ -386,10 +386,10 @@ LaTeX Font Info:    ... okay on input line 8.
 )
 Package hyperref Info: Link coloring ON on input line 8.
 
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.out)
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.out)
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.out)
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.out)
 \@outlinefile=\write4
 \openout4 = `Rd2.out'.
 
@@ -402,14 +402,16 @@ File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
 (Font)              scaled to size 10.0pt on input line 36.
 
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.toc
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.toc
 LaTeX Font Info:    Trying to load font information for U+msa on input line 1.
- (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
+
+(/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Trying to load font information for U+msb on input line 1.
- (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
+
+(/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Trying to load font information for U+rsfs on input line 1.
@@ -435,80 +437,93 @@ LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 2
 (/usr/local/texlive/2024/texmf-dist/tex/latex/psnfss/ts1ptm.fd
 File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
 ) [5] [6]
-Overfull \hbox (51.93982pt too wide) in paragraph at lines 361--364
-\T1/ptm/m/n/10 be named []\T1/zi4/m/n/10 {bootDataNameTag}_0.csv []\T1/ptm/m/n/
-10 for the orig-i-nal data and []\T1/zi4/m/n/10 {bootDataNameTag}_1.csv[]\T1/pt
-m/m/n/10 ,
+Overfull \hbox (36.87909pt too wide) in paragraph at lines 364--368
+\T1/ptm/m/n/10 fault), []\T1/zi4/m/n/10 "memory"[]\T1/ptm/m/n/10 , or []\T1/zi4
+/m/n/10 "files"[]\T1/ptm/m/n/10 . Auto mode uses file-based boot-strap when []\
+T1/zi4/m/n/10 bootstrap_dir
+ []
+
+
+Overfull \hbox (91.13948pt too wide) in paragraph at lines 379--383
+\T1/ptm/m/n/10 be named []\T1/zi4/m/n/10 {bootstrap_prefix}_0.csv []\T1/ptm/m/n
+/10 for op-tional val-i-da-tion data and []\T1/zi4/m/n/10 {bootstrap_prefix}_1.
+csv[]\T1/ptm/m/n/10 ,
  []
 
 [7]
-Overfull \hbox (2.62633pt too wide) in paragraph at lines 391--393
+Overfull \hbox (2.62633pt too wide) in paragraph at lines 418--420
 []\T1/ptm/m/n/10 A one-row data frame where each col-umn cor-re-sponds to a co-
 ef-fi-cient or sum-mary statis-tic. Columns
  []
 
 [8] [9]
-Overfull \hbox (23.55797pt too wide) in paragraph at lines 537--540
+Overfull \hbox (23.55797pt too wide) in paragraph at lines 564--567
 [][][]\T1/zi4/m/n/10 heatmap2[][][] []\T1/ptm/m/n/10 for plot-ting ma-tri-ces d
 i-rectly, [][][]\T1/zi4/m/n/10 MakeHeatMap[][][] []\T1/ptm/m/n/10 for model-bas
 ed pre-dic-tion heat maps, [][][]\T1/zi4/m/n/10 image.plot[][][]
  []
 
 [10]
-Overfull \hbox (13.76787pt too wide) in paragraph at lines 587--589
+Overfull \hbox (13.76787pt too wide) in paragraph at lines 614--616
 []\T1/ptm/m/n/10 Optional char-ac-ter vec-tor of la-bels for rows. If []\T1/zi4
 /m/n/10 NULL []\T1/ptm/m/n/10 (de-fault), uses []\T1/zi4/m/n/10 rownames(mat)[]
 \T1/ptm/m/n/10 . 
  []
 
 
-Overfull \hbox (28.46767pt too wide) in paragraph at lines 590--592
+Overfull \hbox (28.46767pt too wide) in paragraph at lines 617--619
 []\T1/ptm/m/n/10 Optional char-ac-ter vec-tor of la-bels for columns. If []\T1/
 zi4/m/n/10 NULL []\T1/ptm/m/n/10 (de-fault), uses []\T1/zi4/m/n/10 colnames(mat
 )[]\T1/ptm/m/n/10 . 
  []
 
 [11] [12] [13] [14] [15] [16]
-Overfull \hbox (97.41786pt too wide) in paragraph at lines 952--955
+Overfull \hbox (84.56812pt too wide) in paragraph at lines 987--989
+[]\T1/ptm/m/n/10 Character string giv-ing the file name pre-fix for boot-strap 
+data files, e.g. []\T1/zi4/m/n/10 {bootstrap_prefix}_1.csv[]\T1/ptm/m/n/10 . 
+ []
+
+
+Overfull \hbox (97.41786pt too wide) in paragraph at lines 1001--1004
 []\T1/ptm/m/n/10 Character string used as the base name for out-put files. File
 s are named []\T1/zi4/m/n/10 tab{nameTag}_SE{seType}.tex
  []
 
-
-Overfull \hbox (1.55685pt too wide) in paragraph at lines 1007--1009
+[17]
+Overfull \hbox (1.55685pt too wide) in paragraph at lines 1056--1058
 []\T1/ptm/m/n/10 Invisibly re-turns []\T1/zi4/m/n/10 NULL[]\T1/ptm/m/n/10 . The
  func-tion is called for its side ef-fect of writ-ing La-TeX files to []\T1/zi4
 /m/n/10 saveFolder[]\T1/ptm/m/n/10 . 
  []
 
-[17]
-Overfull \hbox (71.91847pt too wide) in paragraph at lines 1024--1027
+
+Overfull \hbox (71.91847pt too wide) in paragraph at lines 1073--1076
 [][][]\T1/zi4/m/n/10 GetTableEntry[][][] []\T1/ptm/m/n/10 for ex-tract-ing in-d
 i-vid-ual model re-sults, [][][]\T1/zi4/m/n/10 FullTransformer[][][] []\T1/ptm/
 m/n/10 for ta-ble clean-ing, [][][]\T1/zi4/m/n/10 Stargazer2FullTable[][][]
  []
 
 [18]
-Overfull \hbox (4.79692pt too wide) in paragraph at lines 1092--1095
+Overfull \hbox (4.79692pt too wide) in paragraph at lines 1141--1144
 [][][]\T1/zi4/m/n/10 GetTableEntry[][][] []\T1/ptm/m/n/10 which uses this func-
 tion for clus-tered stan-dard er-rors, [][][]\T1/zi4/m/n/10 vcovHC[][][] []\T1/
 ptm/m/n/10 for heteroskedasticity-
  []
 
-
-Overfull \hbox (11.23715pt too wide) in paragraph at lines 1117--1120
+[19]
+Overfull \hbox (11.23715pt too wide) in paragraph at lines 1166--1169
 []\T1/ptm/m/n/10 Adds hor-i-zon-tal mar-gin ad-just-ments to a La-TeX ta-ble by
  wrap-ping the ta-ble con-tent in an []\T1/zi4/m/n/10 adjustwidth
  []
 
-[19]
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.ind [20] [21
+
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.ind [20] [21
 
 
 ])
-(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpFvV28w/Rd2pdf27ff
-6dfd6832/Rd2.aux)
+(/private/var/folders/gv/l5wlstr55gl_g0pgx6k47z9m0000gn/T/RtmpZa6xPl/Rd2pdf1474
+337ea743b/Rd2.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -518,7 +533,7 @@ Package rerunfilecheck Info: File `Rd2.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  10678 strings out of 474116
- 161432 string characters out of 5743683
+ 161445 string characters out of 5743683
  1941187 words of memory out of 5000000
  32703 multiletter control sequences out of 15000+600000
  591936 words of font info for 79 fonts, out of 8000000 for 9000
@@ -552,10 +567,10 @@ i10.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr1
 /local/texlive/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/tex
 live/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive/2024/
 texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on Rd2.pdf (21 pages, 154334 bytes).
+Output written on Rd2.pdf (21 pages, 155499 bytes).
 PDF statistics:
- 466 PDF objects out of 1000 (max. 8388607)
- 422 compressed objects within 5 object streams
+ 464 PDF objects out of 1000 (max. 8388607)
+ 420 compressed objects within 5 object streams
  157 named destinations out of 1000 (max. 500000)
  121 words of extra memory for PDF output out of 10000 (max. 10000000)
 

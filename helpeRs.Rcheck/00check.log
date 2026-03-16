@@ -4,13 +4,13 @@
 * R was compiled by
     Apple clang version 16.0.0 (clang-1600.0.26.6)
     GNU Fortran (GCC) 14.2.0
-* running under: macOS Tahoe 26.2
+* running under: macOS Tahoe 26.3.1
 * using session charset: UTF-8
 * using option ‘--as-cran’
 * checking for file ‘helpeRs/DESCRIPTION’ ... OK
 * this is package ‘helpeRs’ version ‘0.0’
 * package encoding: UTF-8
-* checking CRAN incoming feasibility ... [3s/31s] NOTE
+* checking CRAN incoming feasibility ... NOTE
 Maintainer: ‘Connor Jerzak <connor.jerzak@austin.utexas.edu>’
 
 New submission
@@ -26,7 +26,8 @@ New submission
 * checking whether package ‘helpeRs’ can be installed ... OK
 * checking installed package size ... OK
 * checking package directory ... OK
-* checking for future file timestamps ... OK
+* checking for future file timestamps ... NOTE
+unable to verify current time
 * checking DESCRIPTION meta-information ... OK
 * checking top-level files ... OK
 * checking for left-over files ... OK
@@ -41,8 +42,7 @@ New submission
 * checking whether the namespace can be unloaded cleanly ... OK
 * checking use of S3 registration ... OK
 * checking dependencies in R code ... NOTE
-Namespaces in Imports field not imported from:
-  ‘missForest’ ‘plyr’
+Namespace in Imports field not imported from: ‘missForest’
   All declared Imports should be used.
 * checking S3 generic/method consistency ... OK
 * checking replacement functions ... OK
@@ -66,4 +66,4 @@ Namespaces in Imports field not imported from:
 * checking for non-standard things in the check directory ... OK
 * checking for detritus in the temp directory ... OK
 * DONE
-Status: 2 NOTEs
+Status: 3 NOTEs

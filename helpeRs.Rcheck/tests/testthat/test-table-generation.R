@@ -1,5 +1,18 @@
 # Tests for table generation functions: GetTableEntry, Tables2Tex, FullTransformer, Stargazer2FullTable
 
+write_bootstrap_files <- function(data, directory, prefix, reps = 8) {
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+  utils::write.csv(data, file.path(directory, sprintf("%s_0.csv", prefix)), row.names = FALSE)
+  for (rep_idx in seq_len(reps)) {
+    sample_index <- sample.int(nrow(data), size = nrow(data), replace = TRUE)
+    utils::write.csv(
+      data[sample_index, , drop = FALSE],
+      file.path(directory, sprintf("%s_%d.csv", prefix, rep_idx)),
+      row.names = FALSE
+    )
+  }
+}
+
 # GetTableEntry tests
 
 test_that("GetTableEntry returns a data frame", {
@@ -141,6 +154,130 @@ test_that("GetTableEntry counts observations correctly", {
 
   # mtcars has 32 observations
   expect_equal(result$Observations, "32")
+})
+
+test_that("GetTableEntry supports in-memory bootstrap standard errors", {
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  result <- GetTableEntry(
+    fit,
+    clust_id = NULL,
+    seType = "boot",
+    inParens = "se",
+    bootstrap_reps = 25,
+    bootstrap_seed = 123
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true("wt" %in% colnames(result))
+  expect_match(result$wt, "\\(")
+})
+
+test_that("GetTableEntry bootstrap results are reproducible with a fixed seed", {
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  result_1 <- GetTableEntry(
+    fit,
+    clust_id = NULL,
+    seType = "boot",
+    bootstrap_reps = 20,
+    bootstrap_seed = 99
+  )
+  result_2 <- GetTableEntry(
+    fit,
+    clust_id = NULL,
+    seType = "boot",
+    bootstrap_reps = 20,
+    bootstrap_seed = 99
+  )
+
+  expect_identical(result_1, result_2)
+})
+
+test_that("GetTableEntry supports cluster bootstrap when clust_id is outside the formula", {
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  result <- GetTableEntry(
+    fit,
+    clust_id = "cyl",
+    seType = "boot",
+    bootstrap_reps = 20,
+    bootstrap_seed = 321
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true("wt" %in% colnames(result))
+})
+
+test_that("GetTableEntry supports bootstrap inference for GLM models", {
+  data(mtcars)
+  mtcars$am_binary <- mtcars$am
+  fit <- glm(am_binary ~ wt + hp, data = mtcars, family = binomial)
+
+  result <- GetTableEntry(
+    fit,
+    clust_id = NULL,
+    seType = "boot",
+    bootstrap_reps = 20,
+    bootstrap_seed = 456
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true("AIC" %in% colnames(result))
+})
+
+test_that("GetTableEntry errors for unsupported bootstrap model classes", {
+  fit <- stats::arima(AirPassengers, order = c(1, 0, 0))
+
+  expect_error(
+    GetTableEntry(fit, clust_id = NULL, seType = "boot", bootstrap_reps = 10),
+    "supports only `lm` and `glm`"
+  )
+})
+
+test_that("GetTableEntry errors when the bootstrap cluster variable is missing", {
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  expect_error(
+    GetTableEntry(
+      fit,
+      clust_id = "missing_cluster",
+      seType = "boot",
+      bootstrap_reps = 10,
+      bootstrap_seed = 1
+    ),
+    "Cluster variable"
+  )
+})
+
+test_that("GetTableEntry supports file-based bootstrap replications", {
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  bootstrap_dir <- tempfile("bootstrap-files-")
+  write_bootstrap_files(
+    data = mtcars[, c("mpg", "wt", "hp")],
+    directory = bootstrap_dir,
+    prefix = "mtcars_boot",
+    reps = 8
+  )
+
+  result <- GetTableEntry(
+    fit,
+    clust_id = NULL,
+    seType = "boot",
+    bootstrap_source = "files",
+    bootstrap_dir = bootstrap_dir,
+    bootstrap_prefix = "mtcars_boot",
+    bootstrap_reps = 8
+  )
+
+  expect_s3_class(result, "data.frame")
+  expect_true("hp" %in% colnames(result))
 })
 
 # FullTransformer tests
@@ -590,4 +727,65 @@ test_that("Tables2Tex handles font.size parameter", {
 
   # Clean up
   unlink(file.path(temp_dir, "tabFontSize_SEanalytical.tex"))
+})
+
+test_that("Tables2Tex works with in-memory bootstrap inference", {
+  skip_if_not_installed("stargazer")
+  skip_if_not_installed("plyr")
+
+  data(mtcars)
+  fit1 <- lm(mpg ~ wt, data = mtcars)
+  fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+
+  temp_dir <- tempdir()
+
+  expect_no_error(
+    Tables2Tex(
+      reg_list = list(fit1, fit2),
+      clust_id = NULL,
+      seType = "boot",
+      bootstrap_reps = 20,
+      bootstrap_seed = 42,
+      saveFolder = temp_dir,
+      nameTag = "BootstrapMemory",
+      saveFull = FALSE
+    )
+  )
+
+  expect_true(file.exists(file.path(temp_dir, "tabBootstrapMemory_SEboot.tex")))
+  unlink(file.path(temp_dir, "tabBootstrapMemory_SEboot.tex"))
+})
+
+test_that("Tables2Tex works with file-based bootstrap inference", {
+  skip_if_not_installed("stargazer")
+  skip_if_not_installed("plyr")
+
+  data(mtcars)
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+  temp_dir <- tempdir()
+  bootstrap_dir <- tempfile("tables2tex-bootstrap-")
+  write_bootstrap_files(
+    data = mtcars[, c("mpg", "wt", "hp")],
+    directory = bootstrap_dir,
+    prefix = "table_boot",
+    reps = 8
+  )
+
+  expect_no_error(
+    Tables2Tex(
+      reg_list = list(fit),
+      clust_id = NULL,
+      seType = "boot",
+      bootstrap_source = "files",
+      bootstrap_dir = bootstrap_dir,
+      bootstrap_prefix = "table_boot",
+      bootstrap_reps = 8,
+      saveFolder = temp_dir,
+      nameTag = "BootstrapFiles",
+      saveFull = FALSE
+    )
+  )
+
+  expect_true(file.exists(file.path(temp_dir, "tabBootstrapFiles_SEboot.tex")))
+  unlink(file.path(temp_dir, "tabBootstrapFiles_SEboot.tex"))
 })

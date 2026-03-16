@@ -42,6 +42,22 @@ image2 = function(mat,xaxt=NULL,yaxt = NULL,col=NULL,main=NULL,scale_vec=c(1,1.0
   if(!is.null(yaxt)){ graphics::axis(2, at = 0:(nrow(mat)-1)/nrow(mat)*scale_vec[2], tick=F,labels = rev(yaxt),cex.axis = cex.axis,las = 2)  }
 }
 
+.as_regular_grid <- function(x, y, z){
+  x_unique <- sort(unique(x))
+  y_unique <- sort(unique(y))
+  z_grid <- base::tapply(
+    z,
+    list(factor(x, levels = x_unique), factor(y, levels = y_unique)),
+    mean
+  )
+
+  if(is.null(z_grid) || anyNA(z_grid)){
+    return(NULL)
+  }
+
+  list(x = x_unique, y = y_unique, z = unclass(z_grid))
+}
+
 #' Create an interpolated heat map from scattered data
 #'
 #' Interpolates irregularly-spaced \code{(x, y, z)} observations onto a regular
@@ -125,9 +141,12 @@ heatMap <- function(x, y, z,
                     marginalJitterSD_y = 0.01,
                     openBrowser = F){
   if(openBrowser){browser()}
-  s_ <- interp::interp(x=x, y=y, z=z,
-                       xo=seq(min(x),max(x),length=N),
-                       yo=seq(min(y),max(y),length=N),duplicate="mean")
+  s_ <- .as_regular_grid(x, y, z)
+  if(is.null(s_)){
+    s_ <- interp::interp(x=x, y=y, z=z,
+                         xo=seq(min(x),max(x),length=N),
+                         yo=seq(min(y),max(y),length=N),duplicate="mean")
+  }
   if(is.null(xlim)){xlim = c(summary( s_$x ))[c(1,6)]}
   if(is.null(ylim)){ylim = c(summary( s_$y ))[c(1,6)]}
 
@@ -242,16 +261,24 @@ heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
     if(!requireNamespace("ggplot2", quietly = TRUE)){
       stop("Package 'ggplot2' is required for use_gg = TRUE")
     }
-    df <- as.data.frame(as.table(mat))
+    row_values <- if(is.null(row_labels)) rownames(mat) else row_labels
+    col_values <- if(is.null(col_labels)) colnames(mat) else col_labels
+    if(is.null(row_values)){ row_values <- as.character(seq_len(nrow(mat))) }
+    if(is.null(col_values)){ col_values <- as.character(seq_len(ncol(mat))) }
+
+    df <- expand.grid(
+      Var1 = seq_len(nrow(mat)),
+      Var2 = seq_len(ncol(mat))
+    )
+    df$Freq <- as.vector(mat)
     df$Var1 <- factor(df$Var1,
                       levels = rev(seq_len(nrow(mat))),
-                      labels = rev(if(is.null(row_labels)) rownames(mat) else row_labels))
+                      labels = rev(row_values))
     df$Var2 <- factor(df$Var2,
                       levels = seq_len(ncol(mat)),
-                      labels = if(is.null(col_labels)) colnames(mat) else col_labels)
+                      labels = col_values)
     p <- ggplot2::ggplot(df, ggplot2::aes(x = Var2, y = Var1, fill = Freq)) +
       ggplot2::geom_tile() +
-      ggplot2::scale_y_discrete(limits = rev(levels(df$Var1))) +
       ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
       ggplot2::labs(x = NULL, y = NULL)
     if(includeMarginals && requireNamespace("ggExtra", quietly = TRUE)){

@@ -12,6 +12,11 @@ GetTableEntry(
   iv = F,
   inParens = "tstat",
   seType = "analytical",
+  bootstrap_source = "auto",
+  bootstrap_reps = 999L,
+  bootstrap_seed = NULL,
+  bootstrap_dir = NULL,
+  bootstrap_prefix = NULL,
   bootDataLocation = "./",
   bootDataNameTag = "Data",
   bootFactorVars = NULL,
@@ -44,20 +49,42 @@ applicable for models fitted with \code{ivreg()}. Default is \code{FALSE}.}
 
 \item{seType}{Character string specifying the type of standard errors:
 \code{"analytical"} (default) uses sandwich estimators, \code{"boot"} uses
-bootstrap standard errors from pre-computed replications on disk.}
+bootstrap standard errors from either in-memory resampling or pre-computed
+replication datasets.}
 
-\item{bootDataLocation}{Character string giving the folder path containing
-bootstrap replication datasets. Only used when \code{seType = "boot"}.}
+\item{bootstrap_source}{Character string specifying how bootstrap replications
+are sourced: \code{"auto"} (default), \code{"memory"}, or \code{"files"}.
+Auto mode uses file-based bootstrap when \code{bootstrap_dir} or
+\code{bootstrap_prefix} is supplied, and in-memory resampling otherwise.}
 
-\item{bootDataNameTag}{Character string giving the file name prefix for bootstrap
-data files. Files should be named \code{{bootDataNameTag}_0.csv} for the
-original data and \code{{bootDataNameTag}_1.csv}, etc. for replications.}
+\item{bootstrap_reps}{Integer giving the number of bootstrap replications to
+use. For file-based bootstrap, this is the maximum number of replicate
+files to load.}
+
+\item{bootstrap_seed}{Optional integer seed for reproducible in-memory
+bootstrap resampling. Ignored for file-based bootstrap.}
+
+\item{bootstrap_dir}{Character string giving the folder path containing
+bootstrap replication datasets when \code{bootstrap_source = "files"}.}
+
+\item{bootstrap_prefix}{Character string giving the file name prefix for
+bootstrap data files. Files should be named
+\code{{bootstrap_prefix}_0.csv} for optional validation data and
+\code{{bootstrap_prefix}_1.csv}, etc. for replications.}
+
+\item{bootDataLocation}{Deprecated compatibility alias for
+\code{bootstrap_dir}.}
+
+\item{bootDataNameTag}{Deprecated compatibility alias for
+\code{bootstrap_prefix}.}
 
 \item{bootFactorVars}{Character vector of variable names to treat as factors
-during bootstrap estimation.}
+during bootstrap estimation. Deprecated and ignored in the new bootstrap
+workflow.}
 
 \item{bootExcludeCovars}{Character vector of covariate names to exclude from
-the imputation step during bootstrap processing.}
+the imputation step during bootstrap processing. Deprecated and ignored in
+the new bootstrap workflow.}
 
 \item{keepCoef1}{Logical; if \code{TRUE}, includes the first coefficient
 (typically the intercept) in the output. Default is \code{FALSE}.}

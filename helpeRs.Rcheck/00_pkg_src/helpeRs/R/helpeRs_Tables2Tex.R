@@ -22,6 +22,18 @@
 #'   standard errors.
 #' @param seType Character string specifying the type of standard errors:
 #'   \code{"analytical"} (default) or \code{"boot"} for bootstrap.
+#' @param bootstrap_source Character string specifying how bootstrap replications
+#'   are sourced when \code{seType = "boot"}: \code{"auto"} (default),
+#'   \code{"memory"}, or \code{"files"}.
+#' @param bootstrap_reps Integer giving the number of bootstrap replications to
+#'   run in memory mode, or the maximum number of replicate files to load in
+#'   file mode.
+#' @param bootstrap_seed Optional integer seed for reproducible in-memory
+#'   bootstrap resampling.
+#' @param bootstrap_dir Character string giving the folder path containing
+#'   bootstrap replication datasets when \code{bootstrap_source = "files"}.
+#' @param bootstrap_prefix Character string giving the file name prefix for
+#'   bootstrap data files, e.g. \code{{bootstrap_prefix}_1.csv}.
 #' @param checkmark_list Optional named list of binary vectors indicating which
 #'   models include certain features. Names become row labels, values of 1
 #'   produce checkmarks in the table.
@@ -92,6 +104,11 @@
 #' @export
 
 Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
+                       bootstrap_source = "auto",
+                       bootstrap_reps = 999L,
+                       bootstrap_seed = NULL,
+                       bootstrap_dir = NULL,
+                       bootstrap_prefix = NULL,
                        checkmark_list = NULL, addrow_list = NULL,
                        saveFolder = "./", nameTag = "Table", saveFull = T, tabCaption = "",
                        model.names = NULL, NameConversionMat = NULL, DoFullTableKey = T,
@@ -101,29 +118,28 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
                        keepCoef1 = FALSE, # usually intercept 
                        font.size.full = "footnotesize"){
   print2("Processing R tables... [Please ensure input to lm is a data.frame, not matrix or tible]")
-  for(i in 1:length(reg_list)){
+  table_entries <- lapply(seq_along(reg_list), function(i){
+    reg_obj <- reg_list[[i]]
     if("character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(%s, clust_id = '%s',
-                                seType = seType, inParens = inParens, 
-                                superunit_covariateName = superunit_covariateName,
-                                keepCoef1 = keepCoef1, 
-                                superunit_label = superunit_label)",
-                              i, reg_list[i], clust_id)))
+      reg_obj <- eval(parse(text = reg_list[i]))
     }
-    if(!"character" %in% class(reg_list)){
-      eval(parse(text = sprintf("t_%s <- GetTableEntry(reg_list[[i]], clust_id = %s, 
-                                seType = seType, inParens = inParens,
-                                superunit_covariateName = superunit_covariateName,
-                                keepCoef1 = keepCoef1, 
-                                superunit_label = superunit_label)",
-                                i, ifelse(is.null(clust_id), 
-                                          yes = "NULL", 
-                                          no = paste0("'",clust_id,"'"))) ))
-    }
-  }
-  
-  t_ <- eval(parse(text = sprintf("t(plyr::rbind.fill(%s))",
-                                  paste(paste("t_",1:length(reg_list),sep=""),collapse=",") )  ))
+    GetTableEntry(
+      my_lm = reg_obj,
+      clust_id = clust_id,
+      seType = seType,
+      inParens = inParens,
+      bootstrap_source = bootstrap_source,
+      bootstrap_reps = bootstrap_reps,
+      bootstrap_seed = bootstrap_seed,
+      bootstrap_dir = bootstrap_dir,
+      bootstrap_prefix = bootstrap_prefix,
+      superunit_covariateName = superunit_covariateName,
+      keepCoef1 = keepCoef1,
+      superunit_label = superunit_label
+    )
+  })
+
+  t_ <- t(plyr::rbind.fill(table_entries))
   t_[is.na(t_)] <- ""
   t_FULL <- t_
 
