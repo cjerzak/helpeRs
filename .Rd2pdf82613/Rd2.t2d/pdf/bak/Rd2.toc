@@ -1,0 +1,15 @@
+\contentsline {subsection}{cols2numeric}{2}{page.2}
+\contentsline {subsection}{colSummmary}{3}{page.3}
+\contentsline {subsection}{f2n}{4}{page.4}
+\contentsline {subsection}{fixZeroEndings}{4}{page.4}
+\contentsline {subsection}{FullTransformer}{5}{page.5}
+\contentsline {subsection}{GetTableEntry}{6}{page.6}
+\contentsline {subsection}{heatMap}{9}{page.9}
+\contentsline {subsection}{heatmap2}{11}{page.11}
+\contentsline {subsection}{image2}{12}{page.12}
+\contentsline {subsection}{MakeHeatMap}{13}{page.13}
+\contentsline {subsection}{Stargazer2FullTable}{15}{page.15}
+\contentsline {subsection}{Tables2Tex}{16}{page.16}
+\contentsline {subsection}{vcovCluster}{19}{page.19}
+\contentsline {subsection}{WidenMargins}{20}{page.20}
+\contentsline {chapter}{Index}{21}{page.21}

@@ -1,0 +1,1224 @@
+\nonstopmode{}
+\documentclass[a4paper]{book}
+\usepackage[times,inconsolata,hyper]{Rd}
+\usepackage{makeidx}
+\makeatletter\@ifl@t@r\fmtversion{2018/04/01}{}{\usepackage[utf8]{inputenc}}\makeatother
+% \usepackage{graphicx} % @USE GRAPHICX@
+\makeindex{}
+\begin{document}
+\chapter*{}
+\begin{center}
+{\textbf{\huge Package `helpeRs'}}
+\par\bigskip{\large \today}
+\end{center}
+\ifthenelse{\boolean{Rd@use@hyper}}{\hypersetup{pdftitle = {helpeRs: Helper Functions for High-Quality Presentation of Quantitative Research}}}{}
+\ifthenelse{\boolean{Rd@use@hyper}}{\hypersetup{pdfauthor = {Connor Jerzak}}}{}
+\begin{description}
+\raggedright{}
+\item[Title]\AsIs{Helper Functions for High-Quality Presentation of Quantitative Research}
+\item[Version]\AsIs{0.0}
+\item[Description]\AsIs{Helper functions for high-quality presentation of quantitative
+research. Provides tools for generating publication-ready regression tables
+in LaTeX format, with support for clustered standard errors, bootstrap
+inference, and instrumental variables. Also includes visualization utilities
+for creating heat maps and other graphics.}
+\item[Depends]\AsIs{R (>= 3.3.3)}
+\item[License]\AsIs{GPL-3}
+\item[Encoding]\AsIs{UTF-8}
+\item[Imports]\AsIs{fields,
+ggExtra,
+ggplot2,
+interp,
+lmtest,
+missForest,
+plyr,
+sandwich,
+stargazer,
+stringr,
+viridis}
+\item[RoxygenNote]\AsIs{7.3.3}
+\item[Suggests]\AsIs{MASS,
+testthat (>= 3.0.0)}
+\item[Config/testthat/edition]\AsIs{3}
+\end{description}
+\Rdcontents{Contents}
+\HeaderA{cols2numeric}{Convert data frame columns to numeric when possible}{cols2numeric}
+%
+\begin{Description}
+Attempts to coerce each column of a data frame to numeric using
+\code{\LinkA{f2n}{f2n}}. Columns that cannot be coerced (i.e., result in all
+\code{NA} values) are left unchanged. This is useful for cleaning data
+where numeric values may be stored as factors or character strings.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+cols2numeric(x)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] A data frame to process.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A data frame with the same dimensions as \code{x}. Columns that
+could be converted to numeric are returned as numeric; others retain
+their original type.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{f2n}{f2n}} for converting individual vectors,
+\code{\LinkA{colSummmary}{colSummmary}} for summarizing columns
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Data frame with mixed types
+df <- data.frame(
+  a = factor(c("1.5", "2.5", "3.5")),
+  b = c("x", "y", "z"),
+  c = c(1, 2, 3),
+  stringsAsFactors = FALSE
+)
+
+# Convert what can be converted
+df_numeric <- cols2numeric(df)
+sapply(df_numeric, class)
+# a becomes numeric, b stays character, c stays numeric
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{colSummmary}{Summarize each column of a data frame}{colSummmary}
+%
+\begin{Description}
+Computes a single summary value for each column of a data frame. Numeric
+columns are summarized by their mean, while non-numeric columns are
+summarized by their mode (most frequent value). This is primarily used when
+constructing prediction grids for visualization, where you need representative
+values for variables not being varied.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+colSummmary(x)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] A data frame to summarize.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function uses \code{\LinkA{f2n}{f2n}} internally to attempt numeric conversion,
+so factor columns with numeric-looking levels will be treated as numeric.
+\end{Details}
+%
+\begin{Value}
+A named vector with one element per column of \code{x}. Names
+correspond to column names. Numeric summaries are means; non-numeric
+summaries are the most frequent value.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{cols2numeric}{cols2numeric}} for converting columns to numeric,
+\code{\LinkA{MakeHeatMap}{MakeHeatMap}} which uses this function internally
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Summarize mtcars
+colSummmary(mtcars[, 1:4])
+
+# Mixed numeric and character columns
+df <- data.frame(
+  x = c(1, 2, 3, 4),
+  y = c("a", "b", "a", "a")
+)
+colSummmary(df)  # Returns mean of x and mode of y
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{f2n}{Convert factors to numeric values}{f2n}
+%
+\begin{Description}
+Converts a vector to numeric by first coercing to character. This is the
+correct way to extract numeric values from factors, as direct coercion with
+\code{as.numeric()} returns factor level indices rather than the underlying
+values.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+f2n(x)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] A vector to convert, typically a factor whose levels are numeric
+strings (e.g., \code{factor(c("1.5", "2.3", "3.1"))}).
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A numeric vector. Values that cannot be coerced to numeric become
+\code{NA} with a warning.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{cols2numeric}{cols2numeric}} for converting multiple columns of a
+data frame
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Factor with numeric levels
+x <- factor(c("1.5", "2.3", "3.1"))
+
+# Wrong way - returns level indices (1, 2, 3)
+as.numeric(x)
+
+# Correct way - returns actual values
+f2n(x)  # Returns c(1.5, 2.3, 3.1)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{fixZeroEndings}{Ensure numbers have a fixed number of decimal places}{fixZeroEndings}
+%
+\begin{Description}
+Pads numeric strings with trailing zeros so that all values have exactly
+\code{roundAt} digits after the decimal point. This ensures consistent
+formatting in regression tables where column alignment matters.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+fixZeroEndings(zr, roundAt = 2)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{zr}] A character or numeric vector to process. Numeric values are first
+converted to character.
+
+\item[\code{roundAt}] Integer specifying the desired number of decimal places.
+Default is 2.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+A character vector with values padded to have exactly \code{roundAt}
+decimal places. Values without a decimal point receive one followed by
+the appropriate number of zeros.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{GetTableEntry}{GetTableEntry}} which uses this function to format
+coefficient estimates
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Pad to 2 decimal places (default)
+fixZeroEndings(c("1.5", "2", "3.14"))
+# Returns: c("1.50", "2.00", "3.14")
+
+# Pad to 3 decimal places
+fixZeroEndings(c(1.5, 2.33, 3), roundAt = 3)
+# Returns: c("1.500", "2.330", "3.000")
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{FullTransformer}{Clean and reorder regression tables for publication}{FullTransformer}
+%
+\begin{Description}
+Takes a matrix of regression output and performs string replacements,
+row name cleaning, and reordering so that the resulting table is suitable
+for inclusion in LaTeX documents. This function is typically called internally
+by \code{\LinkA{Tables2Tex}{Tables2Tex}} but can be used directly for custom table processing.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+FullTransformer(t_FULL, COLNAMES_VEC, name_conversion_matrix = NULL)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{t\_FULL}] Matrix or data frame containing the raw regression table output,
+typically from \code{\LinkA{GetTableEntry}{GetTableEntry}}.
+
+\item[\code{COLNAMES\_VEC}] Character vector of column names to apply to the final table.
+Length must match the number of columns in \code{t\_FULL}.
+
+\item[\code{name\_conversion\_matrix}] Optional two-column matrix for renaming row labels.
+Column 1 contains regex patterns to match against row names,
+column 2 contains the replacement names. If \code{NULL} (default), no
+renaming is performed.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function performs several transformations:
+\begin{itemize}
+
+\item{} Renames rows using the optional \code{name\_conversion\_matrix}
+\item{} Moves summary statistics (R-squared, observations, etc.) to the bottom
+\item{} Expands camelCase variable names into readable format
+\item{} Handles \code{as.factor()} variable names by extracting factor levels
+\item{} Preserves common acronyms (GDP, AIC, MMD, SMD)
+
+\end{itemize}
+
+\end{Details}
+%
+\begin{Value}
+A transformed data frame with cleaned row names, reordered rows
+(summary statistics at bottom), and the specified column names.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{Tables2Tex}{Tables2Tex}} which calls this function to process full tables,
+\code{\LinkA{GetTableEntry}{GetTableEntry}} for extracting table entries from models
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Create a simple table
+t_raw <- data.frame(Model1 = c("0.5 (2.1)*", "0.95", "100"))
+row.names(t_raw) <- c("gdpPerCapita", "Adjusted R-squared", "Observations")
+
+# Clean and rename
+name_mat <- matrix(c("gdpPerCapita", "GDP per Capita"), ncol = 2)
+t_clean <- FullTransformer(t_raw, COLNAMES_VEC = "Model 1",
+                           name_conversion_matrix = name_mat)
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{GetTableEntry}{Extract regression results as a formatted table row}{GetTableEntry}
+%
+\begin{Description}
+Builds a one-row data frame containing coefficient estimates, standard errors
+or t-statistics, significance stars, and summary statistics from a fitted model.
+Supports both analytical standard errors (including clustered and
+heteroskedasticity-robust) and bootstrap-based inference.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+GetTableEntry(
+  my_lm,
+  clust_id,
+  iv_round = 2,
+  NAME = "",
+  iv = F,
+  inParens = "tstat",
+  seType = "analytical",
+  bootstrap_source = "auto",
+  bootstrap_reps = 999L,
+  bootstrap_seed = NULL,
+  bootstrap_dir = NULL,
+  bootstrap_prefix = NULL,
+  bootDataLocation = "./",
+  bootDataNameTag = "Data",
+  bootFactorVars = NULL,
+  bootExcludeCovars = NULL,
+  keepCoef1 = FALSE,
+  superunit_covariateName = "country",
+  superunit_label = "Countries"
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{my\_lm}] A fitted model object (typically from \code{lm()}, \code{glm()},
+or \code{ivreg()}). The data used to fit the model must be a data.frame.
+
+\item[\code{clust\_id}] Character string giving the name of the clustering variable
+for clustered standard errors. If \code{NULL}, heteroskedasticity-robust
+standard errors (HC1) are used instead.
+
+\item[\code{iv\_round}] Integer specifying the number of decimal places for rounding
+estimates and statistics. Default is 2.
+
+\item[\code{NAME}] Character string used as the column name for the resulting row.
+Default is an empty string.
+
+\item[\code{iv}] Logical; if \code{TRUE}, includes instrumental variable diagnostic
+statistics (Weak instruments and Wu-Hausman tests) in the output. Only
+applicable for models fitted with \code{ivreg()}. Default is \code{FALSE}.
+
+\item[\code{inParens}] Character string specifying what to display in parentheses:
+\code{"tstat"} (default) for t-statistics or \code{"se"} for standard errors.
+
+\item[\code{seType}] Character string specifying the type of standard errors:
+\code{"analytical"} (default) uses sandwich estimators, \code{"boot"} uses
+bootstrap standard errors from either in-memory resampling or pre-computed
+replication datasets.
+
+\item[\code{bootstrap\_source}] Character string specifying how bootstrap replications
+are sourced: \code{"auto"} (default), \code{"memory"}, or \code{"files"}.
+Auto mode uses file-based bootstrap when \code{bootstrap\_dir} or
+\code{bootstrap\_prefix} is supplied, and in-memory resampling otherwise.
+
+\item[\code{bootstrap\_reps}] Integer giving the number of bootstrap replications to
+use. For file-based bootstrap, this is the maximum number of replicate
+files to load.
+
+\item[\code{bootstrap\_seed}] Optional integer seed for reproducible in-memory
+bootstrap resampling. Ignored for file-based bootstrap.
+
+\item[\code{bootstrap\_dir}] Character string giving the folder path containing
+bootstrap replication datasets when \code{bootstrap\_source = "files"}.
+
+\item[\code{bootstrap\_prefix}] Character string giving the file name prefix for
+bootstrap data files. Files should be named
+\code{\{bootstrap\_prefix\}\_0.csv} for optional validation data and
+\code{\{bootstrap\_prefix\}\_1.csv}, etc. for replications.
+
+\item[\code{bootDataLocation}] Deprecated compatibility alias for
+\code{bootstrap\_dir}.
+
+\item[\code{bootDataNameTag}] Deprecated compatibility alias for
+\code{bootstrap\_prefix}.
+
+\item[\code{bootFactorVars}] Character vector of variable names to treat as factors
+during bootstrap estimation. Deprecated and ignored in the new bootstrap
+workflow.
+
+\item[\code{bootExcludeCovars}] Character vector of covariate names to exclude from
+the imputation step during bootstrap processing. Deprecated and ignored in
+the new bootstrap workflow.
+
+\item[\code{keepCoef1}] Logical; if \code{TRUE}, includes the first coefficient
+(typically the intercept) in the output. Default is \code{FALSE}.
+
+\item[\code{superunit\_covariateName}] Character string giving the name of the variable
+used to count higher-level units (e.g., countries in panel data). Default
+is \code{"country"}.
+
+\item[\code{superunit\_label}] Character string used as the row label for the
+higher-level unit count in the output table. Default is \code{"Countries"}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The output format is designed for downstream processing by \code{\LinkA{Tables2Tex}{Tables2Tex}},
+with coefficients formatted as "estimate (stat)*" where stat is either the
+t-statistic or standard error (controlled by \code{inParens}), and * indicates
+p < 0.05.
+\end{Details}
+%
+\begin{Value}
+A one-row data frame where each column corresponds to a coefficient
+or summary statistic. Columns include:
+\begin{itemize}
+
+\item{} Formatted coefficient estimates with significance stars
+\item{} Fit statistic (Adjusted R-squared for linear models, AIC for GLMs)
+\item{} Number of observations
+\item{} Count of higher-level units (e.g., countries)
+\item{} IV diagnostics (if \code{iv = TRUE})
+
+\end{itemize}
+
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{Tables2Tex}{Tables2Tex}} for generating complete LaTeX tables from
+multiple models, \code{\LinkA{vcovCluster}{vcovCluster}} for the clustered standard error
+implementation
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Fit a simple linear model
+data(mtcars)
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+# Extract with robust standard errors
+entry <- GetTableEntry(fit, clust_id = NULL, NAME = "Model 1")
+
+# Extract with clustered standard errors
+entry_clust <- GetTableEntry(fit, clust_id = "cyl", NAME = "Model 2")
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{heatMap}{Create an interpolated heat map from scattered data}{heatMap}
+%
+\begin{Description}
+Interpolates irregularly-spaced \code{(x, y, z)} observations onto a regular
+grid using the \pkg{interp} package and visualizes the result using
+\code{\LinkA{image.plot}{image.plot}} from the \pkg{fields} package. This is useful
+for visualizing relationships in data where observations are not on a regular
+grid.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+heatMap(
+  x,
+  y,
+  z,
+  main = "",
+  N,
+  yaxt = NULL,
+  xlab = "",
+  ylab = "",
+  horizontal = F,
+  useLog = "",
+  legend.width = 1,
+  ylim = NULL,
+  xlim = NULL,
+  zlim = NULL,
+  add.legend = T,
+  legend.only = F,
+  vline = NULL,
+  col_vline = "black",
+  hline = NULL,
+  col_hline = "black",
+  cex.lab = 2,
+  cex.main = 2,
+  myCol = NULL,
+  includeMarginals = F,
+  marginalJitterSD_x = 0.01,
+  marginalJitterSD_y = 0.01,
+  openBrowser = F
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}, \code{y}, \code{z}] Numeric vectors of equal length defining the coordinates and
+values to interpolate. \code{x} and \code{y} are the spatial coordinates,
+\code{z} is the value at each location.
+
+\item[\code{main}] Character string for the plot title. Default is empty.
+
+\item[\code{N}] Integer specifying the number of grid cells in each direction for
+interpolation. Higher values produce smoother plots but take longer.
+
+\item[\code{yaxt}] Optional character vector of labels for the y-axis. If \code{NULL}
+(default), numeric axis labels are used.
+
+\item[\code{xlab}, \code{ylab}] Character strings for axis labels. Default is empty.
+
+\item[\code{horizontal}] Logical; if \code{TRUE}, draw the color legend horizontally
+below the plot. Default is \code{FALSE} (vertical legend on right).
+
+\item[\code{useLog}] Character string specifying which axes to log-transform.
+Can include \code{"x"}, \code{"y"}, and/or \code{"z"} (e.g., \code{"xyz"}
+for all axes). Default is empty (no log transformation).
+
+\item[\code{legend.width}] Numeric value controlling the width of the color legend.
+Default is 1.
+
+\item[\code{xlim}, \code{ylim}, \code{zlim}] Numeric vectors of length 2 giving the plot limits for
+each axis. If \code{NULL} (default), limits are computed from the data.
+
+\item[\code{add.legend}] Logical; if \code{FALSE}, the color legend is suppressed.
+Default is \code{TRUE}.
+
+\item[\code{legend.only}] Logical; if \code{TRUE}, draw only the legend without the
+main plot. Useful for creating custom layouts. Default is \code{FALSE}.
+
+\item[\code{vline}, \code{hline}] Numeric values specifying positions of vertical or
+horizontal reference lines. Default is \code{NULL} (no lines).
+
+\item[\code{col\_vline}, \code{col\_hline}] Colors for the reference lines. Default is
+\code{"black"}.
+
+\item[\code{cex.lab}, \code{cex.main}] Numeric values for character expansion of axis labels
+and title. Default is 2 for both.
+
+\item[\code{myCol}] Optional color palette vector. If \code{NULL}, uses the default
+\code{image.plot} palette.
+
+\item[\code{includeMarginals}] Logical; if \code{TRUE}, adds 1D marginal rug plots
+showing the distribution of x and y values. Default is \code{FALSE}.
+
+\item[\code{marginalJitterSD\_x}, \code{marginalJitterSD\_y}] Numeric values controlling the
+amount of jitter applied to marginal points, as a fraction of the standard
+deviation. Default is 0.01.
+
+\item[\code{openBrowser}] Logical; if \code{TRUE}, enters debug mode via
+\code{browser()} for interactive inspection. Default is \code{FALSE}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+Invisibly returns \code{NULL}. Called for its side effect of producing
+a plot.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{heatmap2}{heatmap2}} for plotting matrices directly,
+\code{\LinkA{MakeHeatMap}{MakeHeatMap}} for model-based prediction heat maps,
+\code{\LinkA{image.plot}{image.plot}} for the underlying plotting function
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Create some scattered data
+set.seed(42)
+x <- runif(100, 0, 10)
+y <- runif(100, 0, 10)
+z <- sin(x) * cos(y) + rnorm(100, sd = 0.1)
+
+# Plot as interpolated heat map
+heatMap(x, y, z, N = 50, main = "Example Heat Map",
+        xlab = "X Variable", ylab = "Y Variable")
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{heatmap2}{Quick heat map visualization of a matrix}{heatmap2}
+%
+\begin{Description}
+A convenience wrapper around \code{\LinkA{heatMap}{heatMap}} for fast visualization of
+matrix-like objects. Can use either base R graphics or \pkg{ggplot2} for a
+more polished appearance.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+heatmap2(
+  mat,
+  row_labels = NULL,
+  col_labels = NULL,
+  use_gg = FALSE,
+  scale = FALSE,
+  log = FALSE,
+  includeMarginals = FALSE,
+  ...
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{mat}] Numeric matrix or data frame to visualize. Will be coerced to a
+matrix if necessary.
+
+\item[\code{row\_labels}] Optional character vector of labels for rows. If \code{NULL}
+(default), uses \code{rownames(mat)}.
+
+\item[\code{col\_labels}] Optional character vector of labels for columns. If
+\code{NULL} (default), uses \code{colnames(mat)}.
+
+\item[\code{use\_gg}] Logical; if \code{TRUE}, creates a \pkg{ggplot2} plot instead
+of using base graphics. Requires the \pkg{ggplot2} package. Default is
+\code{FALSE}.
+
+\item[\code{scale}] Logical; if \code{TRUE}, standardizes values (subtracts mean,
+divides by SD) before plotting. Default is \code{FALSE}.
+
+\item[\code{log}] Logical; if \code{TRUE}, applies natural log transformation to
+values before plotting. Default is \code{FALSE}.
+
+\item[\code{includeMarginals}] Logical; if \code{TRUE} and \code{use\_gg = TRUE},
+adds marginal histograms using \pkg{ggExtra}. For base graphics, adds
+marginal rug plots. Default is \code{FALSE}.
+
+\item[\code{...}] Additional arguments passed to \code{\LinkA{heatMap}{heatMap}} when
+\code{use\_gg = FALSE}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+When \code{use\_gg = TRUE}, the function creates a tile plot using
+\code{\LinkA{geom\_tile}{geom.Rul.tile}} with a white-to-steelblue gradient. Marginal
+histograms can be added using \pkg{ggExtra} if available.
+\end{Details}
+%
+\begin{Value}
+When \code{use\_gg = TRUE}, invisibly returns the ggplot object.
+Otherwise, invisibly returns \code{NULL}. Called for its side effect of
+producing a plot.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{heatMap}{heatMap}} for the underlying scatter-to-grid
+interpolation, \code{\LinkA{image2}{image2}} for simple matrix plotting
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Create a correlation matrix
+cor_mat <- cor(mtcars[, 1:5])
+
+# Quick base R plot
+heatmap2(cor_mat, row_labels = colnames(cor_mat),
+         col_labels = colnames(cor_mat))
+
+## Not run: 
+# ggplot2 version
+heatmap2(cor_mat, use_gg = TRUE)
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{image2}{Plot a matrix as an image with intuitive orientation}{image2}
+%
+\begin{Description}
+A wrapper around \code{\LinkA{image}{image}} that displays matrices with
+the conventional orientation (first row at top, first column at left). The
+base \code{image()} function displays matrices transposed and flipped, which
+can be confusing. This function corrects that behavior.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+image2(
+  mat,
+  xaxt = NULL,
+  yaxt = NULL,
+  col = NULL,
+  main = NULL,
+  scale_vec = c(1, 1.04),
+  cex.axis = 1
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{mat}] Numeric matrix to display as a heat map image.
+
+\item[\code{xaxt}] Optional character vector of labels for the x-axis (columns).
+If \code{NULL} (default), no x-axis labels are drawn.
+
+\item[\code{yaxt}] Optional character vector of labels for the y-axis (rows).
+If \code{NULL} (default), no y-axis labels are drawn.
+
+\item[\code{col}] Optional vector of colors for the heat map. If \code{NULL},
+uses the default \code{image()} color palette.
+
+\item[\code{main}] Optional character string for the plot title.
+
+\item[\code{scale\_vec}] Numeric vector of length 2 controlling the placement scaling
+of tick labels on the x and y axes. Default is \code{c(1, 1.04)}.
+
+\item[\code{cex.axis}] Numeric value for character expansion of axis tick labels.
+Default is 1.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Value}
+Invisibly returns \code{NULL}. Called for its side effect of producing
+a plot.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{heatmap2}{heatmap2}} for a higher-level heat map function,
+\code{\LinkA{heatMap}{heatMap}} for interpolated heat maps from scattered data
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+# Create a simple matrix
+mat <- matrix(1:12, nrow = 3, ncol = 4)
+rownames(mat) <- c("A", "B", "C")
+colnames(mat) <- c("W", "X", "Y", "Z")
+
+# Plot with row/column labels
+image2(mat, xaxt = colnames(mat), yaxt = rownames(mat), main = "Example")
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{MakeHeatMap}{Visualize two-way predictor effects as a heat map}{MakeHeatMap}
+%
+\begin{Description}
+Creates a prediction surface showing how the expected outcome varies across
+a grid of two predictor variables, holding all other predictors at their
+mean (numeric) or mode (categorical) values. The result is saved as a PDF
+file.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+MakeHeatMap(
+  factor1,
+  factor2,
+  outcome,
+  dat,
+  lm_obj,
+  pdf_path,
+  extrap_factor1 = 1,
+  extrap_factor2 = 1,
+  useLog = "",
+  OUTCOME_SCALER = 1,
+  OutcomeTransformFxn = function(x) {
+     x
+ },
+  openBrowser = F
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{factor1}, \code{factor2}] Character strings giving the names of the two
+predictor variables to vary. These must be columns in \code{dat}.
+
+\item[\code{outcome}] Character string giving the name of the outcome variable.
+Used only for excluding from the summary computation.
+
+\item[\code{dat}] Data frame containing the data used to fit the model. Used to
+determine variable ranges and compute summary values.
+
+\item[\code{lm\_obj}] Fitted linear model object (from \code{lm()} or similar) used
+for generating predictions.
+
+\item[\code{pdf\_path}] Character string giving the file path where the PDF plot
+will be saved.
+
+\item[\code{extrap\_factor1}, \code{extrap\_factor2}] Numeric multipliers controlling how far
+beyond the observed data range the prediction grid extends. Values > 1
+extrapolate beyond the data; values < 1 restrict to a subset of the range.
+Default is 1 (exact data range).
+
+\item[\code{useLog}] Character string specifying which axes to log-transform.
+Can include \code{"x"}, \code{"y"}, and/or \code{"z"}. Default is empty
+(no transformation).
+
+\item[\code{OUTCOME\_SCALER}] Numeric value by which predictions are multiplied
+before plotting. Useful for unit conversions. Default is 1.
+
+\item[\code{OutcomeTransformFxn}] Function applied to predictions before scaling.
+Default is the identity function \code{function(x) x}.
+
+\item[\code{openBrowser}] Logical; if \code{TRUE}, pauses execution via
+\code{browser()} for interactive debugging. Default is \code{FALSE}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function uses \code{\LinkA{colSummmary}{colSummmary}} to compute representative values
+for predictors not being varied, then generates predictions across a 50x50
+grid spanning the ranges of the two focal predictors. The predictions are
+visualized using \code{\LinkA{heatMap}{heatMap}} with the \pkg{viridis} color palette.
+\end{Details}
+%
+\begin{Value}
+Invisibly returns \code{NULL}. The function is called for its side
+effect of writing a PDF file to \code{pdf\_path}.
+\end{Value}
+%
+\begin{SeeAlso}
+\code{\LinkA{heatMap}{heatMap}} for the underlying plotting function,
+\code{\LinkA{colSummmary}{colSummmary}} for computing representative predictor values
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Fit a model
+fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+
+# Create heat map of mpg as function of wt and hp
+MakeHeatMap(
+  factor1 = "wt",
+  factor2 = "hp",
+  outcome = "mpg",
+  dat = mtcars,
+  lm_obj = fit,
+  pdf_path = "mpg_heatmap.pdf"
+)
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{Stargazer2FullTable}{Convert a stargazer table to a self-contained longtable}{Stargazer2FullTable}
+%
+\begin{Description}
+Transforms the LaTeX output from \code{\LinkA{stargazer}{stargazer}} into a
+longtable environment suitable for multi-page regression tables. This function
+handles the conversion automatically, including header repetition on continued
+pages.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+Stargazer2FullTable(stargazer_text, fontsize = "footnotesize")
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{stargazer\_text}] Character vector containing the raw lines produced by
+\code{stargazer()} (typically captured with \code{capture.output()}).
+
+\item[\code{fontsize}] Character string specifying the LaTeX font size environment
+to wrap the table in. Common values include \code{"footnotesize"},
+\code{"scriptsize"}, or \code{"tiny"}. Default is \code{"footnotesize"}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function performs several transformations:
+\begin{itemize}
+
+\item{} Replaces \code{table} with \code{longtable} environment
+\item{} Wraps content in the specified font size environment
+\item{} Adds \code{\bsl{}endfirsthead} and \code{\bsl{}endhead} markers for header
+repetition
+\item{} Includes "(Continued from previous page)" note on subsequent pages
+\item{} Removes incompatible stargazer formatting directives
+
+\end{itemize}
+
+\end{Details}
+%
+\begin{Value}
+A character vector of LaTeX code ready to be written to a .tex file
+using \code{write()} or \code{cat()}.
+\end{Value}
+%
+\begin{Section}{LaTeX Requirements}
+
+The output requires the \code{longtable} package in your LaTeX preamble:
+\begin{alltt}\bsl{}usepackage\{longtable\}\end{alltt}
+
+\end{Section}
+%
+\begin{SeeAlso}
+\code{\LinkA{Tables2Tex}{Tables2Tex}} which calls this function internally,
+\code{\LinkA{FullTransformer}{FullTransformer}} for table cleaning before conversion
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Capture stargazer output and convert to longtable
+library(stargazer)
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+sg_output <- capture.output(stargazer(fit))
+
+# Convert to longtable format
+lt_output <- Stargazer2FullTable(sg_output, fontsize = "scriptsize")
+
+# Write to file
+write(lt_output, file = "full_table.tex")
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{Tables2Tex}{Generate publication-ready regression tables in LaTeX}{Tables2Tex}
+%
+\begin{Description}
+Collates a list of regression model objects, extracts their coefficient
+estimates and statistics via \code{\LinkA{GetTableEntry}{GetTableEntry}}, and writes
+publication-ready LaTeX table files using \code{\LinkA{stargazer}{stargazer}}.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+Tables2Tex(
+  reg_list,
+  clust_id,
+  seType = "analytical",
+  bootstrap_source = "auto",
+  bootstrap_reps = 999L,
+  bootstrap_seed = NULL,
+  bootstrap_dir = NULL,
+  bootstrap_prefix = NULL,
+  checkmark_list = NULL,
+  addrow_list = NULL,
+  saveFolder = "./",
+  nameTag = "Table",
+  saveFull = T,
+  tabCaption = "",
+  model.names = NULL,
+  NameConversionMat = NULL,
+  DoFullTableKey = T,
+  superunit_covariateName = "country",
+  superunit_label = "Countries",
+  font.size = "footnotesize",
+  inParens = "tstat",
+  keepCoef1 = FALSE,
+  font.size.full = "footnotesize"
+)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{reg\_list}] A list of fitted model objects, or a character vector of
+object names to evaluate. Models should be fitted using \code{lm()},
+\code{glm()}, or \code{ivreg()}. The data argument to these models
+must be a data.frame (not a matrix or tibble).
+
+\item[\code{clust\_id}] Character string giving the name of the clustering variable
+for clustered standard errors, or \code{NULL} for heteroskedasticity-robust
+standard errors.
+
+\item[\code{seType}] Character string specifying the type of standard errors:
+\code{"analytical"} (default) or \code{"boot"} for bootstrap.
+
+\item[\code{bootstrap\_source}] Character string specifying how bootstrap replications
+are sourced when \code{seType = "boot"}: \code{"auto"} (default),
+\code{"memory"}, or \code{"files"}.
+
+\item[\code{bootstrap\_reps}] Integer giving the number of bootstrap replications to
+run in memory mode, or the maximum number of replicate files to load in
+file mode.
+
+\item[\code{bootstrap\_seed}] Optional integer seed for reproducible in-memory
+bootstrap resampling.
+
+\item[\code{bootstrap\_dir}] Character string giving the folder path containing
+bootstrap replication datasets when \code{bootstrap\_source = "files"}.
+
+\item[\code{bootstrap\_prefix}] Character string giving the file name prefix for
+bootstrap data files, e.g. \code{\{bootstrap\_prefix\}\_1.csv}.
+
+\item[\code{checkmark\_list}] Optional named list of binary vectors indicating which
+models include certain features. Names become row labels, values of 1
+produce checkmarks in the table.
+
+\item[\code{addrow\_list}] Optional named list of vectors to append as additional
+rows to the table. Each list element becomes a row with the element name
+as the row label.
+
+\item[\code{saveFolder}] Character string giving the folder path where LaTeX files
+will be written. Default is the current directory.
+
+\item[\code{nameTag}] Character string used as the base name for output files.
+Files are named \code{tab\{nameTag\}\_SE\{seType\}.tex} and
+\code{FULL\_tab\{nameTag\}\_SE\{seType\}.tex}.
+
+\item[\code{saveFull}] Logical; if \code{TRUE} (default), also produces a full table
+containing all coefficients using the longtable environment.
+
+\item[\code{tabCaption}] Character string for the table caption.
+
+\item[\code{model.names}] Optional character vector of column headings for each model.
+If \code{NULL}, defaults to "Model 1", "Model 2", etc.
+
+\item[\code{NameConversionMat}] Optional two-column matrix for filtering and renaming
+row labels. Column 1 contains regex patterns to match, column 2 contains
+replacement names. Rows not matching any pattern are dropped from the
+condensed table (but retained in the full table).
+
+\item[\code{DoFullTableKey}] Logical; if \code{TRUE} (default), adds a reference to
+the full table in the condensed table's caption.
+
+\item[\code{superunit\_covariateName}] Character string giving the variable name used
+to count higher-level units (e.g., \code{"country"} for panel data).
+
+\item[\code{superunit\_label}] Character string for the row label showing the count
+of higher-level units. Default is \code{"Countries"}.
+
+\item[\code{font.size}] Character string specifying the LaTeX font size for the
+condensed table (e.g., \code{"footnotesize"}, \code{"scriptsize"}).
+
+\item[\code{inParens}] Character string specifying what to display in parentheses:
+\code{"tstat"} (default) or \code{"se"} for standard errors.
+
+\item[\code{keepCoef1}] Logical; if \code{TRUE}, includes the first coefficient
+(typically the intercept) in the output. Default is \code{FALSE}.
+
+\item[\code{font.size.full}] Character string specifying the LaTeX font size for
+the full table. Default is \code{"footnotesize"}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+This is the main user-facing function for the regression table workflow.
+It produces two outputs:
+\begin{enumerate}
+
+\item{} A condensed table showing only the covariates specified in
+\code{NameConversionMat} (or all if \code{NULL})
+\item{} A full table (if \code{saveFull = TRUE}) containing all coefficients
+in longtable format for multi-page output
+
+\end{enumerate}
+
+\end{Details}
+%
+\begin{Value}
+Invisibly returns \code{NULL}. The function is called for its side
+effect of writing LaTeX files to \code{saveFolder}.
+\end{Value}
+%
+\begin{Section}{LaTeX Requirements}
+
+The generated tables require the following LaTeX packages:
+\begin{itemize}
+
+\item{} \code{longtable} for full tables
+\item{} \code{amssymb} for checkmark symbols
+
+\end{itemize}
+
+\end{Section}
+%
+\begin{SeeAlso}
+\code{\LinkA{GetTableEntry}{GetTableEntry}} for extracting individual model results,
+\code{\LinkA{FullTransformer}{FullTransformer}} for table cleaning,
+\code{\LinkA{Stargazer2FullTable}{Stargazer2FullTable}} for longtable conversion
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Fit multiple models
+fit1 <- lm(mpg ~ wt, data = mtcars)
+fit2 <- lm(mpg ~ wt + hp, data = mtcars)
+fit3 <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+
+# Generate tables
+Tables2Tex(
+  reg_list = list(fit1, fit2, fit3),
+  clust_id = NULL,
+  saveFolder = "./tables/",
+  nameTag = "MPG_Models",
+  tabCaption = "Determinants of Fuel Efficiency",
+  model.names = c("Base", "Controls", "Full")
+)
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{vcovCluster}{Cluster-robust covariance matrix estimator}{vcovCluster}
+%
+\begin{Description}
+Computes a clustered sandwich covariance matrix for a fitted model using the
+method of Arellano (1987). This provides standard errors that are robust to
+arbitrary within-cluster correlation.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+vcovCluster(fm, clvar)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{fm}] A fitted model object (typically from \code{lm()} or \code{glm()}).
+For \code{polr} models from \pkg{MASS}, predictions are handled specially.
+
+\item[\code{clvar}] Character string giving the name of the clustering variable.
+This variable must exist in the data used to fit \code{fm}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function applies the degrees-of-freedom correction
+\eqn{(M/(M-1)) \times ((N-1)/(N-K))}{} where M is
+the number of clusters, N is the number of observations, and K is the number
+of parameters.
+\end{Details}
+%
+\begin{Value}
+A K x K covariance matrix where K is the number of model coefficients.
+\end{Value}
+%
+\begin{References}
+Arellano, M. (1987). Computing Robust Standard Errors for Within-Groups
+Estimators. \emph{Oxford Bulletin of Economics and Statistics}, 49(4), 431-434.
+\end{References}
+%
+\begin{SeeAlso}
+\code{\LinkA{GetTableEntry}{GetTableEntry}} which uses this function for clustered
+standard errors, \code{\LinkA{vcovHC}{vcovHC}} for heteroskedasticity-robust
+covariance without clustering
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+data(mtcars)
+fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+# Cluster by number of cylinders
+V_clust <- vcovCluster(fit, "cyl")
+
+# Use with coeftest for clustered standard errors
+library(lmtest)
+coeftest(fit, vcov. = V_clust)
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\HeaderA{WidenMargins}{Widen margins in a LaTeX table string}{WidenMargins}
+%
+\begin{Description}
+Adds horizontal margin adjustments to a LaTeX table by wrapping the table
+content in an \code{adjustwidth} environment from the \pkg{ragged2e} package.
+This is useful when tables are too wide to fit within standard margins.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+WidenMargins(x)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{x}] Character vector containing the LaTeX table code, typically the
+output from \code{\LinkA{stargazer}{stargazer}} or \code{\LinkA{Tables2Tex}{Tables2Tex}}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}
+The function extends margins by 0.5 inches on each side, effectively allowing
+the table to be 1 inch wider than the text width.
+\end{Details}
+%
+\begin{Value}
+A character vector with the modified LaTeX code. The \code{adjustwidth}
+environment is inserted inside the \code{table} environment.
+\end{Value}
+%
+\begin{Section}{LaTeX Requirements}
+
+The output requires the \pkg{ragged2e} package in your LaTeX preamble:
+\begin{alltt}\bsl{}usepackage\{ragged2e\}\end{alltt}
+
+\end{Section}
+%
+\begin{SeeAlso}
+\code{\LinkA{Tables2Tex}{Tables2Tex}} for generating LaTeX tables
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+## Not run: 
+# Read an existing table and widen its margins
+tex_lines <- readLines("my_table.tex")
+tex_wide <- WidenMargins(tex_lines)
+writeLines(tex_wide, "my_table_wide.tex")
+
+## End(Not run)
+
+\end{ExampleCode}
+\end{Examples}
+\printindex{}
+\end{document}

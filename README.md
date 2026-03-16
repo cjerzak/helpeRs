@@ -71,6 +71,33 @@ heatMap(x = mtcars$wt, y = mtcars$hp, z = mtcars$mpg,
         N = 50, xlab = "Weight", ylab = "Horsepower")
 ```
 
+### Bootstrap Standard Errors
+
+```r
+# In-memory row bootstrap
+fit_boot <- lm(mpg ~ wt + hp, data = mtcars)
+Tables2Tex(
+  reg_list = list(fit_boot),
+  clust_id = NULL,
+  seType = "boot",
+  bootstrap_reps = 499,
+  bootstrap_seed = 42,
+  saveFolder = "./tables/",
+  nameTag = "MPG_Bootstrap"
+)
+
+# Cluster bootstrap by cylinder count
+Tables2Tex(
+  reg_list = list(fit_boot),
+  clust_id = "cyl",
+  seType = "boot",
+  bootstrap_reps = 499,
+  bootstrap_seed = 42,
+  saveFolder = "./tables/",
+  nameTag = "MPG_ClusterBootstrap"
+)
+```
+
 ## Features
 
 ### Regression Tables

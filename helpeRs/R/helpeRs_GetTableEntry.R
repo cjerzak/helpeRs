@@ -26,16 +26,33 @@
 #'   \code{"tstat"} (default) for t-statistics or \code{"se"} for standard errors.
 #' @param seType Character string specifying the type of standard errors:
 #'   \code{"analytical"} (default) uses sandwich estimators, \code{"boot"} uses
-#'   bootstrap standard errors from pre-computed replications on disk.
-#' @param bootDataLocation Character string giving the folder path containing
-#'   bootstrap replication datasets. Only used when \code{seType = "boot"}.
-#' @param bootDataNameTag Character string giving the file name prefix for bootstrap
-#'   data files. Files should be named \code{{bootDataNameTag}_0.csv} for the
-#'   original data and \code{{bootDataNameTag}_1.csv}, etc. for replications.
+#'   bootstrap standard errors from either in-memory resampling or pre-computed
+#'   replication datasets.
+#' @param bootstrap_source Character string specifying how bootstrap replications
+#'   are sourced: \code{"auto"} (default), \code{"memory"}, or \code{"files"}.
+#'   Auto mode uses file-based bootstrap when \code{bootstrap_dir} or
+#'   \code{bootstrap_prefix} is supplied, and in-memory resampling otherwise.
+#' @param bootstrap_reps Integer giving the number of bootstrap replications to
+#'   use. For file-based bootstrap, this is the maximum number of replicate
+#'   files to load.
+#' @param bootstrap_seed Optional integer seed for reproducible in-memory
+#'   bootstrap resampling. Ignored for file-based bootstrap.
+#' @param bootstrap_dir Character string giving the folder path containing
+#'   bootstrap replication datasets when \code{bootstrap_source = "files"}.
+#' @param bootstrap_prefix Character string giving the file name prefix for
+#'   bootstrap data files. Files should be named
+#'   \code{{bootstrap_prefix}_0.csv} for optional validation data and
+#'   \code{{bootstrap_prefix}_1.csv}, etc. for replications.
+#' @param bootDataLocation Deprecated compatibility alias for
+#'   \code{bootstrap_dir}.
+#' @param bootDataNameTag Deprecated compatibility alias for
+#'   \code{bootstrap_prefix}.
 #' @param bootFactorVars Character vector of variable names to treat as factors
-#'   during bootstrap estimation.
+#'   during bootstrap estimation. Deprecated and ignored in the new bootstrap
+#'   workflow.
 #' @param bootExcludeCovars Character vector of covariate names to exclude from
-#'   the imputation step during bootstrap processing.
+#'   the imputation step during bootstrap processing. Deprecated and ignored in
+#'   the new bootstrap workflow.
 #' @param keepCoef1 Logical; if \code{TRUE}, includes the first coefficient
 #'   (typically the intercept) in the output. Default is \code{FALSE}.
 #' @param superunit_covariateName Character string giving the name of the variable
@@ -80,6 +97,11 @@ GetTableEntry <- function(my_lm,
                           iv = F,
                           inParens = "tstat",
                           seType = "analytical",
+                          bootstrap_source = "auto",
+                          bootstrap_reps = 999L,
+                          bootstrap_seed = NULL,
+                          bootstrap_dir = NULL,
+                          bootstrap_prefix = NULL,
                           bootDataLocation = "./",
                           bootDataNameTag = "Data",
                           bootFactorVars = NULL,
@@ -89,6 +111,7 @@ GetTableEntry <- function(my_lm,
                           superunit_label = "Countries"
                           ){
   ivDiagnostics <- NULL
+  model_for_meta <- my_lm
   if(seType != "boot"){
     if(is.null(clust_id)){
       if(length(stats::coef(my_lm)) > 1 & !keepCoef1){ my_summary <- my_summary_orig <- lmtest::coeftest(my_lm, vcov. = (VCOV <- sandwich::vcovHC(my_lm, type = "HC1")) )[-1,] }
@@ -112,119 +135,26 @@ GetTableEntry <- function(my_lm,
     }
   }
   if(seType == "boot"){
-    boot_pool <- list.files(  bootDataLocation  )
-    boot_pool <- boot_pool[grepl(boot_pool, pattern = bootDataNameTag)]
-    real_dat <- boot_pool[boot_pool==sprintf("%s_0.csv", bootDataNameTag)]
-    DatFinal_boot <- processDataFxn ( DatFinal_boot_init <- utils::read.csv(sprintf("%s/%s",bootDataLocation,real_dat))[,-1] )
-
-    lmCall <- as.character( my_lm$call ); formulaComp <- lmCall[2]
-    #if(any(grepl(lmCall,pattern="DatFinal_ethnicityGender"))){
-      #DatFinal_boot <- DatFinal_boot_init[DatFinal_boot_init$groupType %in% "ethnicityGender",]
-      #processingInstructions <- gsub(lmCall[3], pattern="DatFinal_ethnicityGender", replace="DatFinal_boot") }
-    #if(all(!grepl(lmCall,pattern="DatFinal_ethnicityGender"))){processingInstructions <- gsub(lmCall[3], pattern="DatFinal", replace="DatFinal_boot") }
-    trimCols <- function(xz){xz}
-    covariate_names <- gsub(strsplit(formulaComp,split="~")[[1]][2],pattern="f2n",replacement="")
-    covariate_names <- gsub(covariate_names,pattern="log\\(",replacement="")
-    covariate_names <- gsub(covariate_names,pattern="as\\.factor\\(",replacement="")
-    covariate_names <- gsub(covariate_names,pattern="\\(",replacement="")
-    covariate_names <- gsub(covariate_names,pattern="\\)",replacement="")
-    covariate_names <- gsub(covariate_names,pattern=" ",replacement="")
-    covariate_names <- unlist(strsplit(covariate_names,split="\\+"))
-
-    covariate_names <- covariate_names[!grepl(covariate_names,pattern="\\*")] # drop interactions (must include main terms)
-    covariate_names <- covariate_names[ !covariate_names %in% bootExcludeCovars ]
-    covariate_names <- covariate_names[covariate_names!='0']
-
-    bootProcessText <- "{
-    DatFinal_boot <- eval(parse(text = processingInstructions))
-    if(!is.null(bootFactorVars)){ for(factor_ in bootFactorVars){ DatFinal_boot[,factor_] <- as.factor(DatFinal_boot[,factor_] ) } }
-    DatFinal_boot_imp <-  try(DatFinal_boot[,covariate_names ],T)
-    if(all(class(DatFinal_boot_imp)=='try-error')){print('boot imp error 1');browser()}
-    if(all(class(DatFinal_boot_imp)%in%c('numeric','character','factor','integer'))){DatFinal_boot_imp<-as.matrix(DatFinal_boot_imp)}
-    if(ncol(DatFinal_boot_imp)>1){
-      DatFinal_boot_imp <- try(missForest::missForest(DatFinal_boot[,covariate_names])$ximp,T)
+    if(isTRUE(iv)){
+      stop("Bootstrap inference does not support IV diagnostics in v1.", call. = FALSE)
     }
-    if(all(class(DatFinal_boot_imp) == 'try-error')){browser()}
-    if(length(c(bootExcludeCovars,covariate_names)) != (length(bootExcludeCovars)+ncol(DatFinal_boot_imp))){print('boot error 3');browser()}
-    DatFinal_boot[,c(bootExcludeCovars,covariate_names)] <- cbind(DatFinal_boot[,bootExcludeCovars],DatFinal_boot_imp)
-    }"
-    eval(parse(text = bootProcessText ))
-    my_lm <- try(stats::lm(formulaComp,DatFinal_boot),T)
-    if("try-error" %in% class(my_lm)){
-      # deals with factors that don't show up in bootstrapped data
-      formula_names <- formula_names_orig <- strsplit(formulaComp,split="\\~")
-      formula_names <- formula_names[[1]][2]
-      formula_names <- strsplit(formula_names, split = "\\+")[[1]]
-      formula_names <- gsub(formula_names,pattern=" ",replacement = "")
-      formula_names <- gsub(formula_names,pattern="log\\(",replacement = "")
-      formula_names <- gsub(formula_names,pattern="as.factor\\(",replacement = "")
-      formula_names <- gsub(formula_names,pattern="f2n\\(",replacement = "")
-      formula_names <- gsub(formula_names,pattern="\\)",replacement = "")
-      formula_length_unique <- apply(DatFinal_boot[,formula_names],2,function(er){length(unique(er))})
-
-      formula_reconstruct <- list(list(),list())
-      formula_reconstruct[[1]] <- formula_names_orig[[1]][1]
-      formula_reconstruct[[2]] <- strsplit(formula_names_orig[[1]][2],split="\\+")[[1]][formula_length_unique!=1]
-      formula_reconstruct[[2]] <- paste(formula_reconstruct[[2]] ,collapse= "+")
-      formula_reconstruct <- paste(formula_reconstruct[[1]],formula_reconstruct[[2]],sep="~")
-      my_lm <- try(stats::lm(formula_reconstruct,DatFinal_boot),T)
-      if('try-error' %in% class(my_lm)){browser()}
-    }
-    if(is.null(clust_id)){
-      if(ncol(my_lm$model) > 2){ my_summary <- my_summary_orig <- lmtest::coeftest(my_lm, vcov. = sandwich::vcovHC(my_lm, type = "HC1"))[-1,]}
-      if(ncol(my_lm$model) == 2){ my_summary <- my_summary_orig <- lmtest::coeftest(my_lm, vcov. = sandwich::vcovHC(my_lm, type = "HC1"))}
-    }
-    if(!is.null(clust_id)){
-      if(ncol(my_lm$model) > 2){ my_summary <- my_summary_orig <- lmtest::coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))[-1,]}
-      if(ncol(my_lm$model) == 2){ my_summary <- my_summary_orig <- lmtest::coeftest(my_lm, vcov. = vcovCluster(my_lm, clust_id))}
-    }
-    if("numeric" %in% class(my_summary)){my_summary<-t(my_summary)}
-    if("numeric" %in% class(my_summary_orig)){my_summary_orig<-t(my_summary_orig)}
-    if(is.null(row.names(my_summary))){row.names(my_summary) <- row.names(stats::coef(summary(my_lm)))[2]}
-
-    boot_pool <- boot_pool[boot_pool != sprintf("%s_0.csv", bootDataNameTag)]
-    coef_mat  <- matrix(NA,ncol=nrow(my_summary),nrow=length(boot_pool))
-    colnames(coef_mat) <- row.names( my_summary )
-    counter___ <- 0; for(boot__ in boot_pool){
-      counter___ <- counter___ + 1
-      DatFinal_boot <- processDataFxn ( DatFinal_boot_init <- utils::read.csv(sprintf("%s/%s",bootDataLocation,boot__))[,-1] )
-
-      # deal with special case
-      if(any(grepl(lmCall,pattern="DatFinal_ethnicityGender"))){
-        DatFinal_boot <- DatFinal_boot_init[DatFinal_boot_init$groupType %in% "ethnicityGender",]
-      }
-
-      #new_call <- paste(as.character(my_lm$call$formula)[-1],collapse="~")
-      #boot_lm <- eval(parse(text = sprintf("lm(%s,data = DatFinal_boot)",formulaComp)))
-      eval(parse(text = bootProcessText ))
-      boot_lm <- try(stats::lm(formulaComp, DatFinal_boot),T)
-      if("try-error" %in% class(boot_lm)){
-        # deals with factors that don't show up in bootstrapped data
-        formula_names <- formula_names_orig <- strsplit(formulaComp,split="\\~")
-        formula_names <- formula_names[[1]][2]
-        formula_names <- strsplit(formula_names, split = "\\+")[[1]]
-        formula_names <- gsub(formula_names,pattern=" ",replacement = "")
-        formula_names <- gsub(formula_names,pattern="log\\(",replacement = "")
-        formula_names <- gsub(formula_names,pattern="as.factor\\(",replacement = "")
-        formula_names <- gsub(formula_names,pattern="f2n\\(",replacement = "")
-        formula_names <- gsub(formula_names,pattern="\\)",replacement = "")
-        formula_length_unique <- apply(DatFinal_boot[,formula_names],2,function(er){length(unique(er))})
-
-        formula_reconstruct <- list(list(),list())
-        formula_reconstruct[[1]] <- formula_names_orig[[1]][1]
-        formula_reconstruct[[2]] <- strsplit(formula_names_orig[[1]][2],split="\\+")[[1]][formula_length_unique!=1]
-        formula_reconstruct[[2]] <- paste(formula_reconstruct[[2]] ,collapse= "+")
-        formula_reconstruct <- paste(formula_reconstruct[[1]],formula_reconstruct[[2]],sep="~")
-        boot_lm <- try(stats::lm(formula_reconstruct,DatFinal_boot),T)
-        if('try-error' %in% class(boot_lm)){browser()}
-      }
-      if(ncol(my_lm$model) > 2){ boot_coefs <- stats::coef(boot_lm)[-1] }
-      if(ncol(my_lm$model) == 2){ boot_coefs <- stats::coef(boot_lm) }
-      boot_coefs <- boot_coefs[names(boot_coefs) %in% row.names(my_summary)]
-      coef_mat[counter___,names(boot_coefs)] <- boot_coefs
-    }
-    my_summary[,2] <- apply(coef_mat,2,function(ze){stats::sd(ze,na.rm=T)})
-    my_summary[,3] <- my_summary[,1]/(my_summary[,2])
+    bootstrap_args <- helpeRsNormalizeBootstrapArgs(
+      bootstrap_source = bootstrap_source,
+      bootstrap_reps = bootstrap_reps,
+      bootstrap_seed = bootstrap_seed,
+      bootstrap_dir = bootstrap_dir,
+      bootstrap_prefix = bootstrap_prefix,
+      bootDataLocation = bootDataLocation,
+      bootDataNameTag = bootDataNameTag,
+      bootFactorVars = bootFactorVars,
+      bootExcludeCovars = bootExcludeCovars
+    )
+    my_summary <- my_summary_orig <- helpeRsBootstrapSummary(
+      fm = my_lm,
+      clust_id = clust_id,
+      keepCoef1 = keepCoef1,
+      bootstrap_args = bootstrap_args
+    )
   }
   my_summary <- round(my_summary,iv_round)
   
@@ -246,26 +176,26 @@ GetTableEntry <- function(my_lm,
   content_ <- paste(content_, star_key, sep = "")
   content_ <- cbind(row.names(my_summary),content_)
 
-  isGLM <- "glm" %in% class(my_lm)
-  evalTex_nSuperunits <- as.character(my_lm$call)[3+isGLM]
-  nSuperunits <- try(length(unique(eval(parse(text = evalTex_nSuperunits))[row.names(my_lm$model),superunit_covariateName])),T)
+  isGLM <- "glm" %in% class(model_for_meta)
+  evalTex_nSuperunits <- as.character(model_for_meta$call)[3+isGLM]
+  nSuperunits <- try(length(unique(eval(parse(text = evalTex_nSuperunits))[row.names(model_for_meta$model),superunit_covariateName])),T)
     
   if(isGLM){
     FitLabel <- "AIC"
-    FitMeasure <- summary(my_lm)$aic
+    FitMeasure <- summary(model_for_meta)$aic
   }
   if(!isGLM){
     FitLabel <- "Adjusted R-squared"
-    FitMeasure <- summary(my_lm)$adj.r.squared
+    FitMeasure <- summary(model_for_meta)$adj.r.squared
 
-    if(length(stats::coef(my_lm))==1){
+    if(length(stats::coef(model_for_meta))==1){
       # assumes outcome is in first position of my_lm$model
-      FitMeasure <- 1-sum(my_lm$residuals^2) / sum((my_lm$model[,1] - mean(my_lm$model[,1]))^2 )
+      FitMeasure <- 1-sum(model_for_meta$residuals^2) / sum((model_for_meta$model[,1] - mean(model_for_meta$model[,1]))^2 )
     }
   }
   
   meta_data <- cbind(c(FitLabel,"Observations",superunit_label),
-                     c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( my_lm$model), nSuperunits ))
+                     c(fixZeroEndings(round(FitMeasure,iv_round)), nrow( model_for_meta$model), nSuperunits ))
   meta_data <-rbind(meta_data,ivDiagnostics)
   final_ <- rbind(content_,meta_data)
   colnames(final_) <- c("mergeVar",NAME)

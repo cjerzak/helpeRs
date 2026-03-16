@@ -1,0 +1,66 @@
+\begin{theindex}
+
+  \item \texttt  {cols2numeric}, \hyperpage{2}, 
+		\hyperindexformat{\textit}{3, 4}
+  \item \texttt  {colSummmary}, \hyperindexformat{\textit}{2}, 
+		\hyperpage{3}, \hyperindexformat{\textit}{14}
+
+  \indexspace
+
+  \item \texttt  {f2n}, \hyperindexformat{\textit}{2, 3}, \hyperpage{4}
+  \item \texttt  {fixZeroEndings}, \hyperpage{4}
+  \item \texttt  {FullTransformer}, \hyperpage{5}, 
+		\hyperindexformat{\textit}{15}, 
+		\hyperindexformat{\textit}{18}
+
+  \indexspace
+
+  \item \texttt  {geom\_tile}, \hyperindexformat{\textit}{11}
+  \item \texttt  {GetTableEntry}, \hyperindexformat{\textit}{5, 6}, 
+		\hyperpage{6}, \hyperindexformat{\textit}{16}, 
+		\hyperindexformat{\textit}{18, 19}
+
+  \indexspace
+
+  \item \texttt  {heatMap}, \hyperpage{9}, 
+		\hyperindexformat{\textit}{11--14}
+  \item \texttt  {heatmap2}, \hyperindexformat{\textit}{10}, 
+		\hyperpage{11}, \hyperindexformat{\textit}{13}
+
+  \indexspace
+
+  \item \texttt  {image}, \hyperindexformat{\textit}{12}
+  \item \texttt  {image.plot}, \hyperindexformat{\textit}{9, 10}
+  \item \texttt  {image2}, \hyperindexformat{\textit}{12}, 
+		\hyperpage{12}
+
+  \indexspace
+
+  \item \texttt  {MakeHeatMap}, \hyperindexformat{\textit}{3}, 
+		\hyperindexformat{\textit}{10}, \hyperpage{13}
+
+  \indexspace
+
+  \item \texttt  {stargazer}, \hyperindexformat{\textit}{15, 16}, 
+		\hyperindexformat{\textit}{20}
+  \item \texttt  {Stargazer2FullTable}, \hyperpage{15}, 
+		\hyperindexformat{\textit}{18}
+
+  \indexspace
+
+  \item \texttt  {Tables2Tex}, \hyperindexformat{\textit}{5, 6}, 
+		\hyperindexformat{\textit}{8}, 
+		\hyperindexformat{\textit}{15}, \hyperpage{16}, 
+		\hyperindexformat{\textit}{20}
+
+  \indexspace
+
+  \item \texttt  {vcovCluster}, \hyperindexformat{\textit}{8}, 
+		\hyperpage{19}
+  \item \texttt  {vcovHC}, \hyperindexformat{\textit}{19}
+
+  \indexspace
+
+  \item \texttt  {WidenMargins}, \hyperpage{20}
+
+\end{theindex}

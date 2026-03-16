@@ -8,6 +8,11 @@ Tables2Tex(
   reg_list,
   clust_id,
   seType = "analytical",
+  bootstrap_source = "auto",
+  bootstrap_reps = 999L,
+  bootstrap_seed = NULL,
+  bootstrap_dir = NULL,
+  bootstrap_prefix = NULL,
   checkmark_list = NULL,
   addrow_list = NULL,
   saveFolder = "./",
@@ -37,6 +42,23 @@ standard errors.}
 
 \item{seType}{Character string specifying the type of standard errors:
 \code{"analytical"} (default) or \code{"boot"} for bootstrap.}
+
+\item{bootstrap_source}{Character string specifying how bootstrap replications
+are sourced when \code{seType = "boot"}: \code{"auto"} (default),
+\code{"memory"}, or \code{"files"}.}
+
+\item{bootstrap_reps}{Integer giving the number of bootstrap replications to
+run in memory mode, or the maximum number of replicate files to load in
+file mode.}
+
+\item{bootstrap_seed}{Optional integer seed for reproducible in-memory
+bootstrap resampling.}
+
+\item{bootstrap_dir}{Character string giving the folder path containing
+bootstrap replication datasets when \code{bootstrap_source = "files"}.}
+
+\item{bootstrap_prefix}{Character string giving the file name prefix for
+bootstrap data files, e.g. \code{{bootstrap_prefix}_1.csv}.}
 
 \item{checkmark_list}{Optional named list of binary vectors indicating which
 models include certain features. Names become row labels, values of 1
