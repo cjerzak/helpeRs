@@ -4,3 +4,16 @@ CLAUDE.md
 /reports/
 /temp/
 AGENTS.md
+
+# R session / IDE state
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# R package build/check artifacts
+*.Rcheck/
+*.tar.gz
+
+# Auto-generated R plot outputs
+Rplots.pdf
