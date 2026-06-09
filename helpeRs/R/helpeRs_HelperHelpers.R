@@ -1,5 +1,5 @@
 # Global variables to avoid R CMD check notes
-utils::globalVariables(c("Var1", "Var2", "Freq"))
+utils::globalVariables(c("Var1", "Var2", "Freq", "Var1Index", "Var2Index"))
 
 #' Cluster-robust covariance matrix estimator
 #'

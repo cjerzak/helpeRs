@@ -18,7 +18,10 @@ test_that("colSummmary returns mode for character columns", {
     category = c("a", "b", "a", "a", "c"),
     stringsAsFactors = FALSE
   )
-  result <- colSummmary(df)
+  expect_warning(
+    result <- colSummmary(df),
+    "NAs introduced by coercion"
+  )
 
   expect_equal(result["category"], c(category = "a"))
 })
@@ -29,7 +32,10 @@ test_that("colSummmary handles mixed data types", {
     char_col = c("x", "y", "x", "x"),
     stringsAsFactors = FALSE
   )
-  result <- colSummmary(df)
+  expect_warning(
+    result <- colSummmary(df),
+    "NAs introduced by coercion"
+  )
 
   expect_equal(as.numeric(result["numeric_col"]), 2.5)
   expect_equal(result["char_col"], c(char_col = "x"))
@@ -49,7 +55,10 @@ test_that("colSummmary handles factors with non-numeric levels", {
   df <- data.frame(
     factor_char = factor(c("cat", "dog", "cat", "cat"))
   )
-  result <- colSummmary(df)
+  expect_warning(
+    result <- colSummmary(df),
+    "NAs introduced by coercion"
+  )
 
   expect_equal(result["factor_char"], c(factor_char = "cat"))
 })

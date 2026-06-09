@@ -219,9 +219,6 @@ Tables2Tex <- function(reg_list, clust_id, seType = "analytical",
     stargazer_text <- Stargazer2FullTable( stargazer_text,
                                            fontsize = ifelse(ncol(t_MadeFull) < 5,
                                                              yes = "footnotesize", no = "tiny"))
-    if(any(grepl(stargazer_text, pattern = "\\.\\."))){
-      print("Debug checkpoint"); browser()
-    }
     write(stargazer_text,file = gsub(sprintf("%s/FULL_tab%s_SE%s.tex",
                                              saveFolder, nameTag, seType),pattern="//",replacement="/") )
   }

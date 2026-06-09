@@ -343,6 +343,31 @@ test_that("heatmap2 ggplot applies log transformation before plotting", {
   expect_equal(levels(result$data$Var2), c("Col1", "Col2"))
 })
 
+test_that("heatmap2 ggplot uses numeric labels when dimnames are absent", {
+  skip_if_not_installed("ggplot2")
+
+  mat <- matrix(1:4, nrow = 2)
+
+  result <- heatmap2(mat, use_gg = TRUE)
+
+  expect_s3_class(result, "gg")
+  expect_equal(levels(result$data$Var1), c("2", "1"))
+  expect_equal(levels(result$data$Var2), c("1", "2"))
+  expect_equal(result$data$Freq, as.vector(mat))
+})
+
+test_that("heatmap2 ggplot can add marginal histograms", {
+  skip_if_not_installed("ggplot2")
+  skip_if_not_installed("ggExtra")
+
+  mat <- matrix(1:9, nrow = 3)
+
+  expect_no_error(
+    result <- heatmap2(mat, use_gg = TRUE, includeMarginals = TRUE)
+  )
+  expect_true(inherits(result, "gg") || inherits(result, "ggExtraPlot"))
+})
+
 # MakeHeatMap tests
 
 test_that("MakeHeatMap runs without error and creates PDF", {

@@ -1,0 +1,55 @@
+name: R check and coverage
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-and-coverage:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: helpeRs
+          extra-packages: |
+            any::covr
+            any::rcmdcheck
+          needs: check
+
+      - name: R CMD check
+        working-directory: helpeRs
+        shell: Rscript {0}
+        run: |
+          rcmdcheck::rcmdcheck(
+            args = c("--no-manual"),
+            error_on = "error",
+            check_dir = "check"
+          )
+
+      - name: Coverage
+        shell: Rscript {0}
+        run: |
+          coverage <- covr::package_coverage("helpeRs", quiet = FALSE)
+          print(coverage)
+          coverage_percent <- covr::percent_coverage(coverage)
+          if (coverage_percent < 95) {
+            stop(
+              sprintf(
+                "Coverage %.2f%% is below the required 95%%.",
+                coverage_percent
+              ),
+              call. = FALSE
+            )
+          }

@@ -15,6 +15,7 @@ write_bootstrap_files <- function(data, directory, prefix, reps = 8) {
 
 read_tex_body <- function(path) {
   lines <- readLines(path, warn = FALSE)
+  lines <- lines[!grepl("^% Date and time:", lines)]
   if (length(lines) <= 2) {
     return(lines)
   }
@@ -283,6 +284,21 @@ test_that("GetTableEntry errors for unsupported bootstrap model classes", {
   )
 })
 
+test_that("GetTableEntry rejects IV diagnostics with bootstrap inference", {
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  expect_error(
+    GetTableEntry(
+      fit,
+      clust_id = NULL,
+      seType = "boot",
+      iv = TRUE,
+      bootstrap_reps = 10
+    ),
+    "does not support IV diagnostics"
+  )
+})
+
 test_that("GetTableEntry errors when the bootstrap cluster variable is missing", {
   data(mtcars)
   fit <- lm(mpg ~ wt + hp, data = mtcars)
@@ -323,6 +339,231 @@ test_that("GetTableEntry supports file-based bootstrap replications", {
 
   expect_s3_class(result, "data.frame")
   expect_true("hp" %in% colnames(result))
+})
+
+test_that("bootstrap argument normalization validates inputs and legacy aliases", {
+  bootstrap_dir <- tempfile("bootstrap-args-")
+  dir.create(bootstrap_dir)
+
+  expect_error(
+    helpeRs:::helpeRsNormalizeBootstrapArgs(bootstrap_reps = 0),
+    "positive integer"
+  )
+  expect_error(
+    helpeRs:::helpeRsNormalizeBootstrapArgs(
+      bootstrap_source = "files",
+      bootstrap_dir = tempfile("missing-dir-"),
+      bootstrap_prefix = "boot"
+    ),
+    "`bootstrap_dir`"
+  )
+  expect_error(
+    helpeRs:::helpeRsNormalizeBootstrapArgs(
+      bootstrap_source = "files",
+      bootstrap_dir = bootstrap_dir,
+      bootstrap_prefix = ""
+    ),
+    "`bootstrap_prefix`"
+  )
+
+  expect_warning(
+    legacy_args <- helpeRs:::helpeRsNormalizeBootstrapArgs(
+      bootDataLocation = bootstrap_dir,
+      bootDataNameTag = "legacy_boot"
+    ),
+    "deprecated"
+  )
+  expect_equal(legacy_args$source, "files")
+  expect_equal(legacy_args$dir, bootstrap_dir)
+  expect_equal(legacy_args$prefix, "legacy_boot")
+
+  expect_warning(
+    processing_args <- helpeRs:::helpeRsNormalizeBootstrapArgs(
+      bootFactorVars = "gear",
+      bootExcludeCovars = "hp"
+    ),
+    "deprecated and ignored"
+  )
+  expect_equal(processing_args$source, "memory")
+})
+
+test_that("bootstrap file discovery validates and orders replicate files", {
+  bootstrap_dir <- tempfile("bootstrap-fileset-")
+  dir.create(bootstrap_dir)
+
+  expect_error(
+    helpeRs:::helpeRsBootstrapFileSet(bootstrap_dir, "mtcars_boot", 5),
+    "No bootstrap replicate files"
+  )
+
+  utils::write.csv(
+    mtcars[1:2, c("mpg", "wt", "hp")],
+    file.path(bootstrap_dir, "mtcars_boot_0.csv"),
+    row.names = FALSE
+  )
+  expect_error(
+    helpeRs:::helpeRsBootstrapFileSet(bootstrap_dir, "mtcars_boot", 5),
+    "were not found"
+  )
+
+  utils::write.csv(mtcars[1:2, c("mpg", "wt", "hp")],
+                   file.path(bootstrap_dir, "mtcars_boot_3.csv"),
+                   row.names = FALSE)
+  utils::write.csv(mtcars[3:4, c("mpg", "wt", "hp")],
+                   file.path(bootstrap_dir, "mtcars_boot_1.csv"),
+                   row.names = FALSE)
+  utils::write.csv(mtcars[5:6, c("mpg", "wt", "hp")],
+                   file.path(bootstrap_dir, "mtcars_boot_2.csv"),
+                   row.names = FALSE)
+
+  file_set <- helpeRs:::helpeRsBootstrapFileSet(
+    bootstrap_dir,
+    "mtcars_boot",
+    bootstrap_reps = 2
+  )
+
+  expect_equal(basename(file_set$validation_file), "mtcars_boot_0.csv")
+  expect_equal(
+    basename(file_set$replicate_files),
+    c("mtcars_boot_1.csv", "mtcars_boot_2.csv")
+  )
+})
+
+test_that("bootstrap data alignment preserves template column types", {
+  template <- data.frame(
+    fac = factor(c("low", "high"), levels = c("low", "high"), ordered = TRUE),
+    flag = c(TRUE, FALSE),
+    count = 1:2,
+    value = c(1.5, 2.5),
+    label = c("a", "b"),
+    stringsAsFactors = FALSE
+  )
+  incoming <- data.frame(
+    X = c("row1", "row2"),
+    fac = c("high", "low"),
+    flag = c("TRUE", "FALSE"),
+    count = c("3", "4"),
+    value = c("5.5", "6.5"),
+    label = c(1, 2),
+    stringsAsFactors = FALSE
+  )
+
+  aligned <- helpeRs:::helpeRsAlignBootstrapData(incoming, template)
+
+  expect_false("X" %in% names(aligned))
+  expect_s3_class(aligned$fac, "ordered")
+  expect_equal(levels(aligned$fac), c("low", "high"))
+  expect_type(aligned$flag, "logical")
+  expect_type(aligned$count, "integer")
+  expect_type(aligned$value, "double")
+  expect_type(aligned$label, "character")
+  expect_error(
+    helpeRs:::helpeRsAlignBootstrapData(data.frame(fac = "low"), template),
+    "missing required columns"
+  )
+  expect_identical(
+    helpeRs:::helpeRsMaybeStripRowNamesColumn(data.frame(), names(template)),
+    data.frame()
+  )
+})
+
+test_that("bootstrap helpers report unalignable data and invalid coefficients", {
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+
+  no_data_fit <- lm(mtcars$mpg ~ mtcars$wt)
+  expect_null(helpeRs:::helpeRsGetOriginalData(no_data_fit))
+
+  missing_data_fit <- fit
+  missing_data_fit$call$data <- quote(missing_mtcars_data)
+  expect_null(helpeRs:::helpeRsGetOriginalData(missing_data_fit))
+
+  unaligned_fit <- fit
+  row.names(unaligned_fit$model) <- paste0("row", seq_len(nrow(unaligned_fit$model)))
+  expect_error(
+    helpeRs:::helpeRsBootstrapTemplateData(unaligned_fit, clust_id = "cyl"),
+    "Unable to align"
+  )
+
+  expect_error(
+    helpeRs:::helpeRsReferenceCoefficients(
+      structure(list(coefficients = c(1, 2)), class = "lm")
+    ),
+    "named coefficients"
+  )
+  expect_error(
+    helpeRs:::helpeRsBootstrapSample(model.frame(fit), clust_id = "missing_cluster"),
+    "not available"
+  )
+})
+
+test_that("bootstrap refitting handles weights, offsets, and failed file replicates", {
+  dat <- data.frame(
+    y = c(1, 2, 3, 4, 5, 6),
+    x = c(0, 1, 2, 3, 4, 5),
+    w = c(1, 2, 1, 2, 1, 2),
+    off = rep(0.25, 6)
+  )
+  fit_weighted <- lm(y ~ x, data = dat, weights = w, offset = off)
+  template_weighted <- model.frame(fit_weighted)
+
+  refit <- helpeRs:::helpeRsRefitBootstrapModel(
+    fit_weighted,
+    template_weighted,
+    template_weighted
+  )
+  expect_s3_class(refit, "lm")
+
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+  bootstrap_dir <- tempfile("bad-bootstrap-files-")
+  dir.create(bootstrap_dir)
+  bad_rep <- mtcars[, c("mpg", "wt")]
+  utils::write.csv(bad_rep, file.path(bootstrap_dir, "bad_boot_1.csv"), row.names = FALSE)
+  utils::write.csv(bad_rep, file.path(bootstrap_dir, "bad_boot_2.csv"), row.names = FALSE)
+
+  expect_error(
+    helpeRs:::helpeRsBootstrapSummary(
+      fit,
+      clust_id = NULL,
+      bootstrap_args = list(
+        source = "files",
+        reps = 2L,
+        dir = bootstrap_dir,
+        prefix = "bad_boot"
+      )
+    ),
+    "at least two valid replicate estimates"
+  )
+})
+
+test_that("bootstrap memory seed cleanup restores the prior random state", {
+  fit <- lm(mpg ~ wt + hp, data = mtcars)
+  template <- model.frame(fit)
+  coef_names <- names(coef(fit))[-1]
+
+  old_seed_exists <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (old_seed_exists) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  on.exit({
+    if (old_seed_exists) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  coef_mat <- helpeRs:::helpeRsBootstrapReplicatesMemory(
+    fit,
+    template_data = template,
+    clust_id = NULL,
+    coef_names = coef_names,
+    reps = 2L,
+    seed = 42
+  )
+
+  expect_equal(dim(coef_mat), c(2L, length(coef_names)))
+  expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
 })
 
 # FullTransformer tests

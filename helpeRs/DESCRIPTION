@@ -19,7 +19,6 @@ Imports:
     ggplot2,
     interp,
     lmtest,
-    missForest,
     plyr,
     sandwich,
     stargazer,

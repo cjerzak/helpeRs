@@ -271,6 +271,8 @@ heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
       Var2 = seq_len(ncol(mat))
     )
     df$Freq <- as.vector(mat)
+    df$Var1Index <- nrow(mat) - df$Var1 + 1
+    df$Var2Index <- df$Var2
     df$Var1 <- factor(df$Var1,
                       levels = rev(seq_len(nrow(mat))),
                       labels = rev(row_values))
@@ -282,6 +284,13 @@ heatmap2 <- function(mat, row_labels = NULL, col_labels = NULL,
       ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
       ggplot2::labs(x = NULL, y = NULL)
     if(includeMarginals && requireNamespace("ggExtra", quietly = TRUE)){
+      p <- ggplot2::ggplot(df, ggplot2::aes(x = Var2Index, y = Var1Index, fill = Freq)) +
+        ggplot2::geom_tile() +
+        ggplot2::geom_point(alpha = 0, show.legend = FALSE) +
+        ggplot2::scale_x_continuous(breaks = seq_len(ncol(mat)), labels = col_values) +
+        ggplot2::scale_y_continuous(breaks = seq_len(nrow(mat)), labels = rev(row_values)) +
+        ggplot2::scale_fill_gradient(low = "white", high = "steelblue") +
+        ggplot2::labs(x = NULL, y = NULL)
       p <- ggExtra::ggMarginal(p, type = "histogram")
     }
     print(p)
